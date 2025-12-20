@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>World Quiz</title>
+<link rel="icon" href="https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/72x72/1f30d.png">
+<style>
+    /* 1. MUTED PALETTE (Sleek & Modern) */
+    :root { 
+        --primary: #70a1ff; 
+        --correct: #5b9a8b; /* Muted Sage Green */
+        --wrong: #c46b6b;   /* Muted Clay Red */
+        --bg-grad: linear-gradient(135deg, #1e1e2e, #2d2d44);
+    }
+
+    body {
+        margin: 0;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        background: var(--bg-grad);
+        color: white;
+        /* 2. FIX CUT-OFF ISSUES (Dynamic Height + Safe Areas) */
+        height: 100dvh; 
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        overflow: hidden;
+        padding-bottom: env(safe-area-inset-bottom); /* Protects home bar */
+    }
+    
+    .glass-panel {
+        background: rgba(255, 255, 255, 0.06);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+    }
+
+    /* NAV BAR */
+    .nav { 
+        width: 100%; max-width: 500px; 
+        padding: 15px 20px 5px 20px; 
+        display: flex; gap: 12px; 
+        box-sizing: border-box; z-index: 10;
+        flex-shrink: 0; /* Prevents squishing */
+    }
+    .nav-btn {
+        flex: 1; padding: 12px; border-radius: 14px;
+        background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.05);
+        color: #888; font-weight: 600; font-size: 0.9rem; cursor: pointer;
+        transition: all 0.2s ease;
+    }
+    .nav-btn.active { background: rgba(112, 161, 255, 0.15); color: #fff; border-color: rgba(112, 161, 255, 0.3); }
+
+    /* LAYOUT CONTAINER */
+    .view { 
+        display: none; width: 100%; max-width: 500px; 
+        height: 100%; /* Fills remaining space */
+        flex-direction: column; 
+        padding: 0 20px 20px 20px; 
+        box-sizing: border-box; 
+        justify-content: space-evenly; /* Distributes items vertically */
+    }
+    .view.active { display: flex; }
+
+    /* QUIZ TEXT (Responsive Sizing) */
+    .quiz-header { text-align: center; flex-shrink: 0; }
+    .streak-display { font-size: 0.75rem; color: #666; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 10px; font-weight: 700; }
+    .flag-display { font-size: 4.5rem; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.3)); margin-bottom: 5px; }
+    .country-display { font-size: 1.6rem; font-weight: 800; margin-bottom: 15px; text-shadow: 0 2px 10px rgba(0,0,0,0.3); line-height: 1.2;}
+
+    /* 3. BUTTONS & HAPTIC POP */
+    .opts-container { 
+        display: flex; flex-direction: column; gap: 10px; 
+        width: 100%; flex-grow: 1; justify-content: center;
+    }
+
+    .opt-btn {
+        position: relative; width: 100%; padding: 18px;
+        border-radius: 18px; font-size: 1rem; color: #f0f0f0; font-weight: 600;
+        text-align: center; cursor: pointer; overflow: hidden;
+        user-select: none; -webkit-tap-highlight-color: transparent;
+        transition: transform 0.1s cubic-bezier(0.4, 0.0, 0.2, 1);
+        border: 1px solid rgba(255,255,255,0.05);
+    }
+    
+    /* THE "POP" FEEL (Deep press) */
+    .opt-btn:active { transform: scale(0.94); background: rgba(255,255,255,0.1); }
+
+    /* BUBBLE ANIMATION (Snappier) */
+    .opt-btn::after {
+        content: ''; position: absolute; top: 50%; left: 50%; width: 100%; padding-bottom: 100%;
+        border-radius: 50%; transform: translate(-50%, -50%) scale(0);
+        transition: transform 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
+        z-index: 0; opacity: 0.9;
+    }
+    .opt-btn span { position: relative; z-index: 1; }
+
+    /* STATES */
+    .opt-btn.correct { border-color: var(--correct); background: rgba(91, 154, 139, 0.2); }
+    .opt-btn.correct::after { background: var(--correct); transform: translate(-50%, -50%) scale(1.5); }
+    
+    .opt-btn.wrong { border-color: var(--wrong); background: rgba(196, 107, 107, 0.2); }
+    .opt-btn.wrong::after { background: var(--wrong); transform: translate(-50%, -50%) scale(1.5); }
+
+    /* NEXT BUTTON (Floating at bottom) */
+    #next-btn {
+        margin-top: auto; /* Pushes to bottom */
+        padding: 18px; width: 100%;
+        background: var(--primary); color: white; border: none; border-radius: 18px;
+        font-weight: 700; font-size: 1.1rem; cursor: pointer; display: none;
+        box-shadow: 0 4px 15px rgba(112, 161, 255, 0.25);
+        animation: slideUp 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+    /* STUDY LIST */
+    .search { width: 100%; padding: 14px; margin: 10px 0; border-radius: 12px; color: white; font-size: 1rem; box-sizing: border-box; outline: none; }
+    .list-area { flex: 1; overflow-y: auto; padding-bottom: 40px; }
+    .row { display: flex; align-items: center; padding: 16px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
+    .row-flag { font-size: 2.2rem; margin-right: 18px; }
+    .row-cap { font-size: 0.9rem; color: #888; margin-top: 4px; }
+</style>
+</head>
+<body>
+
+<div class="nav">
+    <button class="nav-btn active" onclick="tab('quiz')">Quiz</button>
+    <button class="nav-btn" onclick="tab('study')">Study</button>
+</div>
+
+<div id="quiz-view" class="view active">
+    <div class="quiz-header">
+        <div class="streak-display">Streak: <span id="streak">0</span></div>
+        <div class="flag-display" id="q-flag">🌍</div>
+        <div class="country-display" id="q-text">Loading...</div>
+    </div>
+    
+    <div id="opts" class="opts-container"></div>
+    <button id="next-btn" onclick="loadQ()">Next Question</button>
+</div>
+
+<div id="study-view" class="view">
+    <input type="text" id="search" class="search glass-panel" placeholder="Search..." onkeyup="filter()">
+    <div class="list-area" id="list"></div>
+</div>
+
+<script>
+// COMPRESSED DATA
+const d=[
+{c:"Afghanistan",k:"Kabul",f:"🇦🇫"},{c:"Albania",k:"Tirana",f:"🇦🇱"},{c:"Algeria",k:"Algiers",f:"🇩🇿"},{c:"Andorra",k:"Andorra la Vella",f:"🇦🇩"},{c:"Angola",k:"Luanda",f:"🇦🇴"},
+{c:"Antigua & Barbuda",k:"Saint John's",f:"🇦🇬"},{c:"Argentina",k:"Buenos Aires",f:"🇦🇷"},{c:"Armenia",k:"Yerevan",f:"🇦🇲"},{c:"Australia",k:"Canberra",f:"🇦🇺"},{c:"Austria",k:"Vienna",f:"🇦🇹"},
+{c:"Azerbaijan",k:"Baku",f:"🇦🇿"},{c:"Bahamas",k:"Nassau",f:"🇧🇸"},{c:"Bahrain",k:"Manama",f:"🇧🇭"},{c:"Bangladesh",k:"Dhaka",f:"🇧🇩"},{c:"Barbados",k:"Bridgetown",f:"🇧🇧"},
+{c:"Belarus",k:"Minsk",f:"🇧🇾"},{c:"Belgium",k:"Brussels",f:"🇧🇪"},{c:"Belize",k:"Belmopan",f:"🇧🇿"},{c:"Benin",k:"Porto-Novo",f:"🇧🇯"},{c:"Bhutan",k:"Thimphu",f:"🇧🇹"},
+{c:"Bolivia",k:"Sucre",f:"🇧🇴"},{c:"Bosnia & Herzegovina",k:"Sarajevo",f:"🇧🇦"},{c:"Botswana",k:"Gaborone",f:"🇧🇼"},{c:"Brazil",k:"Brasília",f:"🇧🇷"},{c:"Brunei",k:"Bandar Seri Begawan",f:"🇧🇳"},
+{c:"Bulgaria",k:"Sofia",f:"🇧🇬"},{c:"Burkina Faso",k:"Ouagadougou",f:"🇧🇫"},{c:"Burundi",k:"Gitega",f:"🇧🇮"},{c:"Cabo Verde",k:"Praia",f:"🇨🇻"},{c:"Cambodia",k:"Phnom Penh",f:"🇰🇭"},
+{c:"Cameroon",k:"Yaoundé",f:"🇨🇲"},{c:"Canada",k:"Ottawa",f:"🇨🇦"},{c:"Central African Rep.",k:"Bangui",f:"🇨🇫"},{c:"Chad",k:"N'Djamena",f:"🇹🇩"},{c:"Chile",k:"Santiago",f:"🇨🇱"},
+{c:"China",k:"Beijing",f:"🇨🇳"},{c:"Colombia",k:"Bogotá",f:"🇨🇴"},{c:"Comoros",k:"Moroni",f:"🇰🇲"},{c:"Congo (DRC)",k:"Kinshasa",f:"🇨🇩"},{c:"Congo (Rep.)",k:"Brazzaville",f:"🇨🇬"},
+{c:"Costa Rica",k:"San José",f:"🇨🇷"},{c:"Croatia",k:"Zagreb",f:"🇭🇷"},{c:"Cuba",k:"Havana",f:"🇨🇺"},{c:"Cyprus",k:"Nicosia",f:"🇨🇾"},{c:"Czechia",k:"Prague",f:"🇨🇿"},
+{c:"Denmark",k:"Copenhagen",f:"🇩🇰"},{c:"Djibouti",k:"Djibouti",f:"🇩🇯"},{c:"Dominica",k:"Roseau",f:"🇩🇲"},{c:"Dominican Rep.",k:"Santo Domingo",f:"🇩🇴"},{c:"East Timor",k:"Dili",f:"🇹🇱"},
+{c:"Ecuador",k:"Quito",f:"🇪🇨"},{c:"Egypt",k:"Cairo",f:"🇪🇬"},{c:"El Salvador",k:"San Salvador",f:"🇸🇻"},{c:"Equatorial Guinea",k:"Malabo",f:"🇬🇶"},{c:"Eritrea",k:"Asmara",f:"🇪🇷"},
+{c:"Estonia",k:"Tallinn",f:"🇪🇪"},{c:"Eswatini",k:"Mbabane",f:"🇸🇿"},{c:"Ethiopia",k:"Addis Ababa",f:"🇪🇹"},{c:"Fiji",k:"Suva",f:"🇫🇯"},{c:"Finland",k:"Helsinki",f:"🇫🇮"},
+{c:"France",k:"Paris",f:"🇫🇷"},{c:"Gabon",k:"Libreville",f:"🇬🇦"},{c:"Gambia",k:"Banjul",f:"🇬🇲"},{c:"Georgia",k:"Tbilisi",f:"🇬🇪"},{c:"Germany",k:"Berlin",f:"🇩🇪"},
+{c:"Ghana",k:"Accra",f:"🇬🇭"},{c:"Greece",k:"Athens",f:"🇬🇷"},{c:"Grenada",k:"St. George's",f:"🇬🇩"},{c:"Guatemala",k:"Guatemala City",f:"🇬🇹"},{c:"Guinea",k:"Conakry",f:"🇬🇳"},
+{c:"Guinea-Bissau",k:"Bissau",f:"🇬🇼"},{c:"Guyana",k:"Georgetown",f:"🇬🇾"},{c:"Haiti",k:"Port-au-Prince",f:"🇭🇹"},{c:"Honduras",k:"Tegucigalpa",f:"🇭🇳"},{c:"Hungary",k:"Budapest",f:"🇭🇺"},
+{c:"Iceland",k:"Reykjavík",f:"🇮🇸"},{c:"India",k:"New Delhi",f:"🇮🇳"},{c:"Indonesia",k:"Jakarta",f:"🇮🇩"},{c:"Iran",k:"Tehran",f:"🇮🇷"},{c:"Iraq",k:"Baghdad",f:"🇮🇶"},
+{c:"Ireland",k:"Dublin",f:"🇮🇪"},{c:"Israel",k:"Jerusalem",f:"🇮🇱"},{c:"Italy",k:"Rome",f:"🇮🇹"},{c:"Ivory Coast",k:"Yamoussoukro",f:"🇨🇮"},{c:"Jamaica",k:"Kingston",f:"🇯🇲"},
+{c:"Japan",k:"Tokyo",f:"🇯🇵"},{c:"Jordan",k:"Amman",f:"🇯🇴"},{c:"Kazakhstan",k:"Astana",f:"🇰🇿"},{c:"Kenya",k:"Nairobi",f:"🇰🇪"},{c:"Kiribati",k:"Tarawa",f:"🇰🇮"},
+{c:"Kosovo",k:"Pristina",f:"🇽🇰"},{c:"Kuwait",k:"Kuwait City",f:"🇰🇼"},{c:"Kyrgyzstan",k:"Bishkek",f:"🇰🇬"},{c:"Laos",k:"Vientiane",f:"🇱🇦"},{c:"Latvia",k:"Riga",f:"🇱🇻"},
+{c:"Lebanon",k:"Beirut",f:"🇱🇧"},{c:"Lesotho",k:"Maseru",f:"🇱🇸"},{c:"Liberia",k:"Monrovia",f:"🇱🇷"},{c:"Libya",k:"Tripoli",f:"🇱🇾"},{c:"Liechtenstein",k:"Vaduz",f:"🇱🇮"},
+{c:"Lithuania",k:"Vilnius",f:"🇱🇹"},{c:"Luxembourg",k:"Luxembourg",f:"🇱🇺"},{c:"Madagascar",k:"Antananarivo",f:"🇲🇬"},{c:"Malawi",k:"Lilongwe",f:"🇲🇼"},{c:"Malaysia",k:"Kuala Lumpur",f:"🇲🇾"},
+{c:"Maldives",k:"Malé",f:"🇲🇻"},{c:"Mali",k:"Bamako",f:"🇲🇱"},{c:"Malta",k:"Valletta",f:"🇲🇹"},{c:"Marshall Islands",k:"Majuro",f:"🇲🇭"},{c:"Mauritania",k:"Nouakchott",f:"🇲🇷"},
+{c:"Mauritius",k:"Port Louis",f:"🇲🇺"},{c:"Mexico",k:"Mexico City",f:"🇲🇽"},{c:"Micronesia",k:"Palikir",f:"🇫🇲"},{c:"Moldova",k:"Chisinau",f:"🇲🇩"},{c:"Monaco",k:"Monaco",f:"🇲🇨"},
+{c:"Mongolia",k:"Ulaanbaatar",f:"🇲🇳"},{c:"Montenegro",k:"Podgorica",f:"🇲🇪"},{c:"Morocco",k:"Rabat",f:"🇲🇦"},{c:"Mozambique",k:"Maputo",f:"🇲🇿"},{c:"Myanmar",k:"Naypyidaw",f:"🇲🇲"},
+{c:"Namibia",k:"Windhoek",f:"🇳🇦"},{c:"Nauru",k:"Yaren",f:"🇳🇷"},{c:"Nepal",k:"Kathmandu",f:"🇳🇵"},{c:"Netherlands",k:"Amsterdam",f:"🇳🇱"},{c:"New Zealand",k:"Wellington",f:"🇳🇿"},
+{c:"Nicaragua",k:"Managua",f:"🇳🇮"},{c:"Niger",k:"Niamey",f:"🇳🇪"},{c:"Nigeria",k:"Abuja",f:"🇳🇬"},{c:"North Korea",k:"Pyongyang",f:"🇰🇵"},{c:"North Macedonia",k:"Skopje",f:"🇲🇰"},
+{c:"Norway",k:"Oslo",f:"🇳🇴"},{c:"Oman",k:"Muscat",f:"🇴🇲"},{c:"Pakistan",k:"Islamabad",f:"🇵🇰"},{c:"Palau",k:"Ngerulmud",f:"🇵🇼"},{c:"Palestine",k:"Ramallah",f:"🇵🇸"},
+{c:"Panama",k:"Panama City",f:"🇵🇦"},{c:"Papua New Guinea",k:"Port Moresby",f:"🇵🇬"},{c:"Paraguay",k:"Asunción",f:"🇵🇾"},{c:"Peru",k:"Lima",f:"🇵🇪"},{c:"Philippines",k:"Manila",f:"🇵🇭"},
+{c:"Poland",k:"Warsaw",f:"🇵🇱"},{c:"Portugal",k:"Lisbon",f:"🇵🇹"},{c:"Qatar",k:"Doha",f:"🇶🇦"},{c:"Romania",k:"Bucharest",f:"🇷🇴"},{c:"Russia",k:"Moscow",f:"🇷🇺"},
+{c:"Rwanda",k:"Kigali",f:"🇷🇼"},{c:"St. Kitts & Nevis",k:"Basseterre",f:"🇰🇳"},{c:"St. Lucia",k:"Castries",f:"🇱🇨"},{c:"St. Vincent",k:"Kingstown",f:"🇻🇨"},{c:"Samoa",k:"Apia",f:"🇼🇸"},
+{c:"San Marino",k:"San Marino",f:"🇸🇲"},{c:"Sao Tome & Principe",k:"Sao Tome",f:"🇸🇹"},{c:"Saudi Arabia",k:"Riyadh",f:"🇸🇦"},{c:"Senegal",k:"Dakar",f:"🇸🇳"},{c:"Serbia",k:"Belgrade",f:"🇷🇸"},
+{c:"Seychelles",k:"Victoria",f:"🇸🇨"},{c:"Sierra Leone",k:"Freetown",f:"🇸🇱"},{c:"Singapore",k:"Singapore",f:"🇸🇬"},{c:"Slovakia",k:"Bratislava",f:"🇸🇰"},{c:"Slovenia",k:"Ljubljana",f:"🇸🇮"},
+{c:"Solomon Islands",k:"Honiara",f:"🇸🇧"},{c:"Somalia",k:"Mogadishu",f:"🇸🇴"},{c:"South Africa",k:"Pretoria",f:"🇿🇦"},{c:"South Korea",k:"Seoul",f:"🇰🇷"},{c:"South Sudan",k:"Juba",f:"🇸🇸"},
+{c:"Spain",k:"Madrid",f:"🇪🇸"},{c:"Sri Lanka",k:"Sri Jayawardenepura Kotte",f:"🇱🇰"},{c:"Sudan",k:"Khartoum",f:"🇸🇩"},{c:"Suriname",k:"Paramaribo",f:"🇸🇷"},{c:"Sweden",k:"Stockholm",f:"🇸🇪"},
+{c:"Switzerland",k:"Bern",f:"🇨🇭"},{c:"Syria",k:"Damascus",f:"🇸🇾"},{c:"Taiwan",k:"Taipei",f:"🇹🇼"},{c:"Tajikistan",k:"Dushanbe",f:"🇹🇯"},{c:"Tanzania",k:"Dodoma",f:"🇹🇿"},
+{c:"Thailand",k:"Bangkok",f:"🇹🇭"},{c:"Togo",k:"Lomé",f:"🇹🇬"},{c:"Tonga",k:"Nukuʻalofa",f:"🇹🇴"},{c:"Trinidad & Tobago",k:"Port of Spain",f:"🇹🇹"},{c:"Tunisia",k:"Tunis",f:"🇹🇳"},
+{c:"Türkiye",k:"Ankara",f:"🇹🇷"},{c:"Turkmenistan",k:"Ashgabat",f:"🇹🇲"},{c:"Tuvalu",k:"Funafuti",f:"🇹🇻"},{c:"Uganda",k:"Kampala",f:"🇺🇬"},{c:"Ukraine",k:"Kyiv",f:"🇺🇦"},
+{c:"UAE",k:"Abu Dhabi",f:"🇦🇪"},{c:"United Kingdom",k:"London",f:"🇬🇧"},{c:"United States",k:"Washington, D.C.",f:"🇺🇸"},{c:"Uruguay",k:"Montevideo",f:"🇺🇾"},{c:"Uzbekistan",k:"Tashkent",f:"🇺🇿"},
+{c:"Vanuatu",k:"Port Vila",f:"🇻🇺"},{c:"Vatican City",k:"Vatican City",f:"🇻🇦"},{c:"Venezuela",k:"Caracas",f:"🇻🇪"},{c:"Vietnam",k:"Hanoi",f:"🇻🇳"},{c:"Yemen",k:"Sana'a",f:"🇾🇪"},
+{c:"Zambia",k:"Lusaka",f:"🇿🇲"},{c:"Zimbabwe",k:"Harare",f:"🇿🇼"}
+];
+
+let streak=0, cur={}, lock=false;
+
+function tab(t) {
+    document.querySelectorAll('.view').forEach(e=>e.classList.remove('active'));
+    document.querySelectorAll('.nav-btn').forEach(e=>e.classList.remove('active'));
+    document.getElementById(t+'-view').classList.add('active');
+    document.querySelector(`button[onclick="tab('${t}')"]`).classList.add('active');
+    if(t==='study') renderList();
+}
+
+function loadQ() {
+    try {
+        lock=false;
+        document.getElementById('next-btn').style.display='none';
+        const con = document.getElementById('opts');
+        con.innerHTML='';
+        
+        const q = d[Math.floor(Math.random()*d.length)];
+        cur = q;
+        document.getElementById('q-text').innerText = q.c;
+        document.getElementById('q-flag').innerText = q.f;
+
+        let opts = d.filter(x=>x.k!==q.k).sort(()=>Math.random()-0.5).slice(0,3);
+        opts.push(q);
+        opts.sort(()=>Math.random()-0.5);
+
+        opts.forEach(o=>{
+            let b = document.createElement('div');
+            b.className = 'glass-panel opt-btn';
+            b.innerHTML = `<span>${o.k}</span>`;
+            b.onclick = ()=>check(b, o.k);
+            con.appendChild(b);
+        });
+    } catch(e) { alert("Data Load Error"); }
+}
+
+function check(btn, ans) {
+    if(lock) return;
+    lock = true;
+    
+    if(ans === cur.k) {
+        btn.classList.add('correct');
+        streak++;
+        if(navigator.vibrate) navigator.vibrate(10);
+        setTimeout(loadQ, 1000);
+    } else {
+        btn.classList.add('wrong');
+        streak=0;
+        if(navigator.vibrate) navigator.vibrate([40,40]);
+        // Show correct
+        document.querySelectorAll('.opt-btn').forEach(b=>{
+            if(b.innerText === cur.k) b.classList.add('correct');
+        });
+        document.getElementById('next-btn').style.display='block';
+    }
+    document.getElementById('streak').innerText = streak;
+}
+
+let listDone = false;
+function renderList() {
+    if(listDone) return;
+    const l = document.getElementById('list');
+    l.innerHTML='';
+    [...d].sort((a,b)=>a.c.localeCompare(b.c)).forEach(i=>{
+        let r = document.createElement('div');
+        r.className='row';
+        r.innerHTML = `<div class="row-flag">${i.f}</div><div class="row-text"><span style="font-weight:bold">${i.c}</span><span class="row-cap">${i.k}</span></div>`;
+        l.appendChild(r);
+    });
+    listDone=true;
+}
+
+function filter() {
+    let v = document.getElementById('search').value.toLowerCase();
+    document.querySelectorAll('.row').forEach(r=>{
+        r.style.display = r.innerText.toLowerCase().includes(v) ? 'flex' : 'none';
+    });
+}
+
+window.onload=loadQ;
+</script>
+</body>
+</html>
