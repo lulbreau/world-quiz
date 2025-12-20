@@ -353,4 +353,27 @@
     function renderList() {
         if (listRendered) return;
         const listContent = document.getElementById('list-content');
-        listContent.
+        listContent.innerHTML = '';
+        const sorted = [...data].sort((a, b) => a.country.localeCompare(b.country));
+        sorted.forEach(item => {
+            const row = document.createElement('div');
+            row.className = 'country-row';
+            row.innerHTML = `<span style="font-weight:bold; color:white">${item.country}</span><span style="color:#888">${item.capital}</span>`;
+            listContent.appendChild(row);
+        });
+        listRendered = true;
+    }
+
+    function filterList() {
+        const query = document.getElementById('search-input').value.toLowerCase();
+        document.querySelectorAll('.country-row').forEach(row => {
+            row.style.display = row.innerText.toLowerCase().includes(query) ? 'flex' : 'none';
+        });
+    }
+
+    // Force Start
+    window.onload = loadQuestion;
+
+</script>
+</body>
+</html>
