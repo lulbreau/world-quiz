@@ -312,28 +312,63 @@ const d=[
 {c:"Zambia",k:"Lusaka",f:"🇿🇲"},{c:"Zimbabwe",k:"Harare",f:"🇿🇼"}
 ];
 
-// --- AUDIO SETUP ---
-const sounds = {
-    click:   new Audio('click.mp3'),
-    correct: new Audio('correct.mp3'),
-    wrong:   new Audio('wrong.mp3'),
-    shatter: new Audio('shatter.mp3'), // For streak loss > 10
-    victory: new Audio('victory.mp3')
+// --- POLYPHONIC AUDIO SETUP ---
+const soundFiles = {
+    click:   'click.mp3',
+    correct: 'correct.mp3',
+    wrong:   'wrong.mp3',
+    shatter: 'shatter.mp3',
+    victory: 'victory.mp3'
 };
 
-// Preload & Volume Mix
-for(let k in sounds) {
-    sounds[k].load();
-    sounds[k].volume = 0.5;
+// We store the master volumes here
+const volumes = {
+    click: 0.5,
+    correct: 0.5,
+    wrong: 0.5,
+    shatter: 0.7,
+    victory: 0.8
+};
+
+// Pre-load the "master" tracks
+const masters = {};
+for(let k in soundFiles) {
+    const a = new Audio(soundFiles[k]);
+    a.preload = 'auto'; // Force browser to download header
+    a.load();
+    masters[k] = a;
 }
-sounds.victory.volume = 0.8; // Make victory louder
-sounds.shatter.volume = 0.7; // Make shatter louder
+
+// "Unlock" audio on first touch (Mobile Fix)
+let audioUnlocked = false;
+function unlockAudio() {
+    if(audioUnlocked) return;
+    // Play silence on all masters to verify interaction
+    for(let k in masters) {
+        masters[k].play().then(() => {
+            masters[k].pause();
+            masters[k].currentTime = 0;
+        }).catch(()=>{});
+    }
+    audioUnlocked = true;
+    document.removeEventListener('click', unlockAudio);
+    document.removeEventListener('touchstart', unlockAudio);
+}
+document.addEventListener('click', unlockAudio);
+document.addEventListener('touchstart', unlockAudio);
 
 function playSound(type) {
-    const s = sounds[type];
-    if(s) {
-        s.currentTime = 0; 
-        s.play().catch(e => console.log('Audio Blocked', e));
+    const master = masters[type];
+    if(master) {
+        // CLONE the node. This creates a new instance for this specific click.
+        // This allows 'correct.mp3' to play 3 times overlapping if you click fast.
+        const clone = master.cloneNode(); 
+        clone.volume = volumes[type] || 0.5;
+        
+        clone.play().catch(e => console.warn('Audio blocked', e));
+        
+        // Garbage collection usually handles the clone, but we can help it
+        clone.onended = () => { clone.remove(); };
     }
 }
 // -------------------
