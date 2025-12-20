@@ -321,7 +321,6 @@ const soundFiles = {
     victory: 'victory.mp3'
 };
 
-// We store the master volumes here
 const volumes = {
     click: 0.5,
     correct: 0.5,
@@ -334,7 +333,7 @@ const volumes = {
 const masters = {};
 for(let k in soundFiles) {
     const a = new Audio(soundFiles[k]);
-    a.preload = 'auto'; // Force browser to download header
+    a.preload = 'auto'; 
     a.load();
     masters[k] = a;
 }
@@ -343,31 +342,40 @@ for(let k in soundFiles) {
 let audioUnlocked = false;
 function unlockAudio() {
     if(audioUnlocked) return;
-    // Play silence on all masters to verify interaction
+    
     for(let k in masters) {
+        // 1. MUTE the master track before the warm-up play
+        masters[k].muted = true; 
+        
         masters[k].play().then(() => {
+            // 2. Pause immediately
             masters[k].pause();
             masters[k].currentTime = 0;
-        }).catch(()=>{});
+            
+            // 3. UNMUTE it so it's ready for the game
+            masters[k].muted = false;
+            masters[k].volume = volumes[k]; 
+        }).catch(()=>{/*Ignore errors*/});
     }
+    
     audioUnlocked = true;
     document.removeEventListener('click', unlockAudio);
     document.removeEventListener('touchstart', unlockAudio);
 }
+
 document.addEventListener('click', unlockAudio);
 document.addEventListener('touchstart', unlockAudio);
 
 function playSound(type) {
     const master = masters[type];
     if(master) {
-        // CLONE the node. This creates a new instance for this specific click.
-        // This allows 'correct.mp3' to play 3 times overlapping if you click fast.
         const clone = master.cloneNode(); 
+        // Ensure clone volume matches config
         clone.volume = volumes[type] || 0.5;
+        // Ensure clone is not muted (just in case)
+        clone.muted = false; 
         
         clone.play().catch(e => console.warn('Audio blocked', e));
-        
-        // Garbage collection usually handles the clone, but we can help it
         clone.onended = () => { clone.remove(); };
     }
 }
