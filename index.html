@@ -4,91 +4,353 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>World Quiz</title>
-    <link rel="icon" href="https://cdnjs.cloudflare.com/ajax/libs/twemoji/14.0.2/72x72/1f30d.png">
-    <link rel="apple-touch-icon" href="https://cdnjs.cloudflare.com/ajax/libs/twemoji/14.0.2/72x72/1f30d.png">
+    
+    <link rel="icon" href="https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/72x72/1f30d.png">
+    <link rel="apple-touch-icon" href="https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/72x72/1f30d.png">
+
     <style>
+        :root {
+            --primary: #5c7cfa;
+            --bg: #121212;
+            --card-bg: #1e1e1e;
+            --text: #e0e0e0;
+            --correct: #2f9e44;
+            --wrong: #e03131;
+            --border: #333333;
+        }
+
         body {
-            background-color: #121212;
-            color: white;
-            font-family: sans-serif;
-            text-align: center;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
             display: flex;
             flex-direction: column;
             align-items: center;
             height: 100vh;
             margin: 0;
-            padding: 20px;
+            overflow: hidden; 
         }
-        .card {
-            font-size: 2rem;
-            font-weight: bold;
-            margin: 30px 0;
-            color: #5c7cfa;
-        }
-        button {
-            background: #2a2a2a;
-            color: white;
-            border: 1px solid #444;
-            padding: 15px;
+
+        /* NAVIGATION */
+        .nav-bar {
+            display: flex;
             width: 100%;
-            max-width: 400px;
-            margin: 5px 0;
-            border-radius: 10px;
-            font-size: 1.1rem;
+            max-width: 500px;
+            padding: 10px 15px;
+            gap: 10px;
+            box-sizing: border-box;
+            background: var(--bg);
+            z-index: 10;
+            border-bottom: 1px solid #222;
         }
-        button.correct { background: #2f9e44; border-color: #2f9e44; }
-        button.wrong { background: #e03131; border-color: #e03131; }
+
+        .nav-btn {
+            flex: 1;
+            padding: 10px;
+            background: transparent;
+            border: 1px solid var(--border);
+            color: #888;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+        }
+
+        .nav-btn.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        /* VIEWS */
+        .view-section {
+            display: none;
+            width: 100%;
+            height: 100%;
+            flex-direction: column;
+            align-items: center;
+        }
+        .view-section.active-view { display: flex; }
+
+        /* QUIZ CONTAINER */
+        .container {
+            width: 100%;
+            max-width: 500px;
+            padding: 1rem;
+            box-sizing: border-box;
+            text-align: center;
+            overflow-y: auto;
+        }
+
+        .score-board { 
+            font-size: 0.85rem; 
+            color: #666; 
+            margin-bottom: 0.5rem; 
+            letter-spacing: 1px; 
+            text-transform: uppercase;
+        }
+
+        .card {
+            font-size: 1.8rem;
+            font-weight: 800;
+            margin: 10px 0 30px 0;
+            min-height: 60px;
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.3);
+        }
+
+        .options-grid { display: flex; flex-direction: column; gap: 12px; }
+
+        /* BUTTON STYLES */
+        button.option-btn {
+            position: relative; 
+            background: #252525; /* Dark Grey Background */
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.1rem;
+            font-size: 1rem;
+            font-weight: 500;
+            color: var(--text);
+            cursor: pointer;
+            width: 100%;
+            overflow: hidden; /* Clips the bubble */
+            transition: transform 0.1s;
+            -webkit-tap-highlight-color: transparent;
+            /* No z-index here, handled by children */
+        }
+
+        button.option-btn:active { transform: scale(0.97); }
+
+        /* The Text Label (Sits on top) */
+        .btn-text {
+            position: relative;
+            z-index: 2; /* Top Layer */
+            pointer-events: none; /* Let clicks pass to button */
+        }
+
+        /* The Bubble Animation (Sits in middle) */
+        button.option-btn::after {
+            content: '';
+            position: absolute;
+            top: 50%; left: 50%;
+            width: 400px; height: 400px; /* Big enough to cover button */
+            background: transparent;
+            border-radius: 50%;
+            transform: translate(-50%, -50%) scale(0); /* Start small */
+            transition: transform 0.5s cubic-bezier(0.25, 1, 0.5, 1);
+            z-index: 1; /* Middle Layer (Above background, below text) */
+        }
+
+        /* STATES */
+        button.correct::after {
+            background-color: var(--correct);
+            transform: translate(-50%, -50%) scale(1);
+        }
+        button.correct { border-color: var(--correct) !important; color: white !important; }
+
+        button.wrong::after {
+            background-color: var(--wrong);
+            transform: translate(-50%, -50%) scale(1);
+        }
+        button.wrong { border-color: var(--wrong) !important; color: white !important; }
+
+        /* NEXT BUTTON */
+        #next-btn {
+            margin-top: 2rem;
+            padding: 1rem;
+            width: 100%;
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            display: none; 
+            box-shadow: 0 5px 15px rgba(92, 124, 250, 0.4);
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* STUDY LIST */
+        .list-container {
+            width: 100%;
+            max-width: 500px;
+            flex: 1;
+            overflow-y: auto; 
+            padding: 0 15px 80px 15px; 
+            box-sizing: border-box;
+        }
+
+        .search-box {
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
+            border-radius: 8px;
+            border: 1px solid #333;
+            background: #252525;
+            color: white;
+            font-size: 1rem;
+            box-sizing: border-box;
+        }
+
+        .country-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 15px 10px;
+            border-bottom: 1px solid #2a2a2a;
+            font-size: 0.95rem;
+        }
     </style>
 </head>
 <body>
-    <h1>World Quiz</h1>
-    <div id="streak">Streak: 0</div>
-    <div class="card" id="question">Loading...</div>
-    <div id="options"></div>
 
-    <script>
-        // STARTING WITH JUST 5 COUNTRIES TO TEST
-        const data = [
-            {country: "France", capital: "Paris"},
-            {country: "Japan", capital: "Tokyo"},
-            {country: "Brazil", capital: "Brasília"},
-            {country: "Egypt", capital: "Cairo"},
-            {country: "Australia", capital: "Canberra"}
-        ];
+<div class="nav-bar">
+    <button class="nav-btn active" onclick="switchTab('quiz')">Quiz</button>
+    <button class="nav-btn" onclick="switchTab('study')">Study List</button>
+</div>
 
-        let currentStreak = 0;
+<div id="quiz-view" class="view-section active-view">
+    <div class="container">
+        <div class="score-board">STREAK: <span id="streak" style="color:white; font-weight:bold">0</span></div>
+        <div class="card" id="question-text">Loading...</div>
+        <div class="options-grid" id="options-container"></div>
+        <button id="next-btn" onclick="nextQuestion()">Next Question</button>
+    </div>
+</div>
 
-        function loadQuestion() {
-            const container = document.getElementById('options');
-            container.innerHTML = '';
-            
-            // Pick Random
-            const item = data[Math.floor(Math.random() * data.length)];
-            document.getElementById('question').innerText = item.country;
-            
-            // Create Options
-            const distractors = data.filter(d => d.capital !== item.capital)
-                                    .sort(() => Math.random() - 0.5).slice(0, 3);
-            const options = [item, ...distractors].sort(() => Math.random() - 0.5);
+<div id="study-view" class="view-section">
+    <div class="list-container">
+        <input type="text" id="search-input" class="search-box" placeholder="Search countries..." onkeyup="filterList()">
+        <div id="list-content"></div>
+    </div>
+</div>
+
+<script>
+    // FULL DATASET
+    const data = [
+        {country:"Afghanistan",capital:"Kabul"},{country:"Albania",capital:"Tirana"},{country:"Algeria",capital:"Algiers"},{country:"Andorra",capital:"Andorra la Vella"},{country:"Angola",capital:"Luanda"},{country:"Antigua & Barbuda",capital:"Saint John's"},{country:"Argentina",capital:"Buenos Aires"},{country:"Armenia",capital:"Yerevan"},
+        {country:"Australia",capital:"Canberra"},{country:"Austria",capital:"Vienna"},{country:"Azerbaijan",capital:"Baku"},{country:"Bahamas",capital:"Nassau"},{country:"Bahrain",capital:"Manama"},{country:"Bangladesh",capital:"Dhaka"},{country:"Barbados",capital:"Bridgetown"},{country:"Belarus",capital:"Minsk"},{country:"Belgium",capital:"Brussels"},
+        {country:"Belize",capital:"Belmopan"},{country:"Benin",capital:"Porto-Novo"},{country:"Bhutan",capital:"Thimphu"},{country:"Bolivia",capital:"Sucre"},{country:"Bosnia & Herzegovina",capital:"Sarajevo"},{country:"Botswana",capital:"Gaborone"},{country:"Brazil",capital:"Brasília"},{country:"Brunei",capital:"Bandar Seri Begawan"},
+        {country:"Bulgaria",capital:"Sofia"},{country:"Burkina Faso",capital:"Ouagadougou"},{country:"Burundi",capital:"Gitega"},{country:"Cabo Verde",capital:"Praia"},{country:"Cambodia",capital:"Phnom Penh"},{country:"Cameroon",capital:"Yaoundé"},{country:"Canada",capital:"Ottawa"},{country:"Central African Rep.",capital:"Bangui"},
+        {country:"Chad",capital:"N'Djamena"},{country:"Chile",capital:"Santiago"},{country:"China",capital:"Beijing"},{country:"Colombia",capital:"Bogotá"},{country:"Comoros",capital:"Moroni"},{country:"Congo (DRC)",capital:"Kinshasa"},{country:"Congo (Rep.)",capital:"Brazzaville"},{country:"Costa Rica",capital:"San José"},
+        {country:"Croatia",capital:"Zagreb"},{country:"Cuba",capital:"Havana"},{country:"Cyprus",capital:"Nicosia"},{country:"Czech Republic",capital:"Prague"},{country:"Denmark",capital:"Copenhagen"},{country:"Djibouti",capital:"Djibouti"},{country:"Dominica",capital:"Roseau"},{country:"Dominican Republic",capital:"Santo Domingo"},
+        {country:"East Timor",capital:"Dili"},{country:"Ecuador",capital:"Quito"},{country:"Egypt",capital:"Cairo"},{country:"El Salvador",capital:"San Salvador"},{country:"Equatorial Guinea",capital:"Malabo"},{country:"Eritrea",capital:"Asmara"},{country:"Estonia",capital:"Tallinn"},{country:"Eswatini",capital:"Mbabane"},
+        {country:"Ethiopia",capital:"Addis Ababa"},{country:"Fiji",capital:"Suva"},{country:"Finland",capital:"Helsinki"},{country:"France",capital:"Paris"},{country:"Gabon",capital:"Libreville"},{country:"Gambia",capital:"Banjul"},{country:"Georgia",capital:"Tbilisi"},{country:"Germany",capital:"Berlin"},{country:"Ghana",capital:"Accra"},
+        {country:"Greece",capital:"Athens"},{country:"Grenada",capital:"St. George's"},{country:"Guatemala",capital:"Guatemala City"},{country:"Guinea",capital:"Conakry"},{country:"Guinea-Bissau",capital:"Bissau"},{country:"Guyana",capital:"Georgetown"},{country:"Haiti",capital:"Port-au-Prince"},{country:"Honduras",capital:"Tegucigalpa"},
+        {country:"Hungary",capital:"Budapest"},{country:"Iceland",capital:"Reykjavík"},{country:"India",capital:"New Delhi"},{country:"Indonesia",capital:"Jakarta"},{country:"Iran",capital:"Tehran"},{country:"Iraq",capital:"Baghdad"},{country:"Ireland",capital:"Dublin"},{country:"Israel",capital:"Jerusalem"},{country:"Italy",capital:"Rome"},
+        {country:"Ivory Coast",capital:"Yamoussoukro"},{country:"Jamaica",capital:"Kingston"},{country:"Japan",capital:"Tokyo"},{country:"Jordan",capital:"Amman"},{country:"Kazakhstan",capital:"Astana"},{country:"Kenya",capital:"Nairobi"},{country:"Kiribati",capital:"Tarawa"},{country:"Kosovo",capital:"Pristina"},{country:"Kuwait",capital:"Kuwait City"},
+        {country:"Kyrgyzstan",capital:"Bishkek"},{country:"Laos",capital:"Vientiane"},{country:"Latvia",capital:"Riga"},{country:"Lebanon",capital:"Beirut"},{country:"Lesotho",capital:"Maseru"},{country:"Liberia",capital:"Monrovia"},{country:"Libya",capital:"Tripoli"},{country:"Liechtenstein",capital:"Vaduz"},{country:"Lithuania",capital:"Vilnius"},
+        {country:"Luxembourg",capital:"Luxembourg"},{country:"Madagascar",capital:"Antananarivo"},{country:"Malawi",capital:"Lilongwe"},{country:"Malaysia",capital:"Kuala Lumpur"},{country:"Maldives",capital:"Malé"},{country:"Mali",capital:"Bamako"},{country:"Malta",capital:"Valletta"},{country:"Marshall Islands",capital:"Majuro"},
+        {country:"Mauritania",capital:"Nouakchott"},{country:"Mauritius",capital:"Port Louis"},{country:"Mexico",capital:"Mexico City"},{country:"Micronesia",capital:"Palikir"},{country:"Moldova",capital:"Chisinau"},{country:"Monaco",capital:"Monaco"},{country:"Mongolia",capital:"Ulaanbaatar"},{country:"Montenegro",capital:"Podgorica"},
+        {country:"Morocco",capital:"Rabat"},{country:"Mozambique",capital:"Maputo"},{country:"Myanmar",capital:"Naypyidaw"},{country:"Namibia",capital:"Windhoek"},{country:"Nauru",capital:"Yaren"},{country:"Nepal",capital:"Kathmandu"},{country:"Netherlands",capital:"Amsterdam"},{country:"New Zealand",capital:"Wellington"},
+        {country:"Nicaragua",capital:"Managua"},{country:"Niger",capital:"Niamey"},{country:"Nigeria",capital:"Abuja"},{country:"North Korea",capital:"Pyongyang"},{country:"North Macedonia",capital:"Skopje"},{country:"Norway",capital:"Oslo"},{country:"Oman",capital:"Muscat"},{country:"Pakistan",capital:"Islamabad"},{country:"Palau",capital:"Ngerulmud"},
+        {country:"Palestine",capital:"Ramallah"},{country:"Panama",capital:"Panama City"},{country:"Papua New Guinea",capital:"Port Moresby"},{country:"Paraguay",capital:"Asunción"},{country:"Peru",capital:"Lima"},{country:"Philippines",capital:"Manila"},{country:"Poland",capital:"Warsaw"},{country:"Portugal",capital:"Lisbon"},
+        {country:"Qatar",capital:"Doha"},{country:"Romania",capital:"Bucharest"},{country:"Russia",capital:"Moscow"},{country:"Rwanda",capital:"Kigali"},{country:"Saint Kitts & Nevis",capital:"Basseterre"},{country:"Saint Lucia",capital:"Castries"},{country:"Saint Vincent",capital:"Kingstown"},{country:"Samoa",capital:"Apia"},
+        {country:"San Marino",capital:"San Marino"},{country:"Sao Tome & Principe",capital:"Sao Tome"},{country:"Saudi Arabia",capital:"Riyadh"},{country:"Senegal",capital:"Dakar"},{country:"Serbia",capital:"Belgrade"},{country:"Seychelles",capital:"Victoria"},{country:"Sierra Leone",capital:"Freetown"},{country:"Singapore",capital:"Singapore"},
+        {country:"Slovakia",capital:"Bratislava"},{country:"Slovenia",capital:"Ljubljana"},{country:"Solomon Islands",capital:"Honiara"},{country:"Somalia",capital:"Mogadishu"},{country:"South Africa",capital:"Pretoria"},{country:"South Korea",capital:"Seoul"},{country:"South Sudan",capital:"Juba"},{country:"Spain",capital:"Madrid"},
+        {country:"Sri Lanka",capital:"Sri Jayawardenepura Kotte"},{country:"Sudan",capital:"Khartoum"},{country:"Suriname",capital:"Paramaribo"},{country:"Sweden",capital:"Stockholm"},{country:"Switzerland",capital:"Bern"},{country:"Syria",capital:"Damascus"},{country:"Taiwan",capital:"Taipei"},{country:"Tajikistan",capital:"Dushanbe"},
+        {country:"Tanzania",capital:"Dodoma"},{country:"Thailand",capital:"Bangkok"},{country:"Togo",capital:"Lomé"},{country:"Tonga",capital:"Nukuʻalofa"},{country:"Trinidad & Tobago",capital:"Port of Spain"},{country:"Tunisia",capital:"Tunis"},{country:"Turkey",capital:"Ankara"},{country:"Turkmenistan",capital:"Ashgabat"},
+        {country:"Tuvalu",capital:"Funafuti"},{country:"Uganda",capital:"Kampala"},{country:"Ukraine",capital:"Kyiv"},{country:"UAE",capital:"Abu Dhabi"},{country:"United Kingdom",capital:"London"},{country:"United States",capital:"Washington, D.C."},{country:"Uruguay",capital:"Montevideo"},{country:"Uzbekistan",capital:"Tashkent"},
+        {country:"Vanuatu",capital:"Port Vila"},{country:"Vatican City",capital:"Vatican City"},{country:"Venezuela",capital:"Caracas"},{country:"Vietnam",capital:"Hanoi"},{country:"Yemen",capital:"Sana'a"},{country:"Zambia",capital:"Lusaka"},{country:"Zimbabwe",capital:"Harare"}
+    ];
+
+    let currentStreak = 0;
+    let correctAnswer = "";
+    let isAnswered = false;
+
+    // --- NAVIGATION ---
+    function switchTab(tab) {
+        document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active-view'));
+        document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
+        if (tab === 'quiz') {
+            document.getElementById('quiz-view').classList.add('active-view');
+            document.querySelectorAll('.nav-btn')[0].classList.add('active');
+        } else {
+            document.getElementById('study-view').classList.add('active-view');
+            document.querySelectorAll('.nav-btn')[1].classList.add('active');
+            renderList();
+        }
+    }
+
+    // --- LOGIC ---
+    function shuffle(array) { return array.sort(() => Math.random() - 0.5); }
+
+    function loadQuestion() {
+        try {
+            isAnswered = false;
+            document.getElementById('next-btn').style.display = 'none';
+            const container = document.getElementById('options-container');
+            container.innerHTML = ''; 
+
+            const randomItem = data[Math.floor(Math.random() * data.length)];
+            const country = randomItem.country;
+            correctAnswer = randomItem.capital;
+
+            const distractors = data
+                .filter(item => item.capital !== correctAnswer)
+                .sort(() => Math.random() - 0.5)
+                .slice(0, 3)
+                .map(item => item.capital);
+
+            const options = shuffle([correctAnswer, ...distractors]);
+            document.getElementById('question-text').innerText = country;
 
             options.forEach(opt => {
                 const btn = document.createElement('button');
-                btn.innerText = opt.capital;
-                btn.onclick = () => {
-                    if(opt.capital === item.capital) {
-                        btn.className = 'correct';
-                        currentStreak++;
-                        setTimeout(loadQuestion, 800);
-                    } else {
-                        btn.className = 'wrong';
-                        currentStreak = 0;
-                    }
-                    document.getElementById('streak').innerText = "Streak: " + currentStreak;
-                };
+                btn.className = 'option-btn';
+                // WRAP TEXT IN SPAN FOR Z-INDEX FIX
+                btn.innerHTML = `<span class="btn-text">${opt}</span>`;
+                btn.onclick = () => checkAnswer(btn, opt);
                 container.appendChild(btn);
             });
+        } catch(e) { 
+            document.getElementById('question-text').innerText = "Error - Please Refresh";
         }
-        loadQuestion();
-    </script>
-</body>
-</html>
+    }
+
+    function checkAnswer(btn, selected) {
+        if (isAnswered) return; // STRICT LOCK: Stops multiple clicks
+        isAnswered = true;
+        
+        const buttons = document.querySelectorAll('.option-btn');
+
+        if (selected === correctAnswer) {
+            // CORRECT: Green Bubble + Wait + Auto Next
+            btn.classList.add('correct');
+            currentStreak++;
+            if(navigator.vibrate) navigator.vibrate(10);
+            
+            setTimeout(() => {
+                loadQuestion();
+            }, 1000); // 1 Second delay to admire the green bubble
+
+        } else {
+            // WRONG: Red Bubble + Stop + Show Next Button
+            btn.classList.add('wrong');
+            currentStreak = 0;
+            if(navigator.vibrate) navigator.vibrate([40,40]);
+            
+            // Highlight the correct one
+            buttons.forEach(b => { 
+                if (b.innerText === correctAnswer) b.classList.add('correct'); 
+            });
+            
+            // Show Manual Next Button
+            document.getElementById('next-btn').style.display = 'block';
+        }
+        document.getElementById('streak').innerText = currentStreak;
+    }
+
+    function nextQuestion() { loadQuestion(); }
+
+    let listRendered = false;
+    function renderList() {
+        if (listRendered) return;
+        const listContent = document.getElementById('list-content');
+        listContent.
