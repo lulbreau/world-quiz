@@ -268,48 +268,49 @@
 </div>
 
 <script>
-// --- DATA (Truncated for brevity, assuming standard list) ---
+// UPDATED DATA WITH REGIONS (r)
+// AF=Africa, AS=Asia, EU=Europe, NA=North America, SA=South America, OC=Oceania
 const d=[
-{c:"Afghanistan",k:"Kabul",f:"🇦🇫"},{c:"Albania",k:"Tirana",f:"🇦🇱"},{c:"Algeria",k:"Algiers",f:"🇩🇿"},{c:"Andorra",k:"Andorra la Vella",f:"🇦🇩"},{c:"Angola",k:"Luanda",f:"🇦🇴"},
-{c:"Antigua & Barbuda",k:"Saint John's",f:"🇦🇬"},{c:"Argentina",k:"Buenos Aires",f:"🇦🇷"},{c:"Armenia",k:"Yerevan",f:"🇦🇲"},{c:"Australia",k:"Canberra",f:"🇦🇺"},{c:"Austria",k:"Vienna",f:"🇦🇹"},
-{c:"Azerbaijan",k:"Baku",f:"🇦🇿"},{c:"Bahamas",k:"Nassau",f:"🇧🇸"},{c:"Bahrain",k:"Manama",f:"🇧🇭"},{c:"Bangladesh",k:"Dhaka",f:"🇧🇩"},{c:"Barbados",k:"Bridgetown",f:"🇧🇧"},
-{c:"Belarus",k:"Minsk",f:"🇧🇾"},{c:"Belgium",k:"Brussels",f:"🇧🇪"},{c:"Belize",k:"Belmopan",f:"🇧🇿"},{c:"Benin",k:"Porto-Novo",f:"🇧🇯"},{c:"Bhutan",k:"Thimphu",f:"🇧🇹"},
-{c:"Bolivia",k:"Sucre",f:"🇧🇴"},{c:"Bosnia & Herzegovina",k:"Sarajevo",f:"🇧🇦"},{c:"Botswana",k:"Gaborone",f:"🇧🇼"},{c:"Brazil",k:"Brasília",f:"🇧🇷"},{c:"Brunei",k:"Bandar Seri Begawan",f:"🇧🇳"},
-{c:"Bulgaria",k:"Sofia",f:"🇧🇬"},{c:"Burkina Faso",k:"Ouagadougou",f:"🇧🇫"},{c:"Burundi",k:"Gitega",f:"🇧🇮"},{c:"Cabo Verde",k:"Praia",f:"🇨🇻"},{c:"Cambodia",k:"Phnom Penh",f:"🇰🇭"},
-{c:"Cameroon",k:"Yaoundé",f:"🇨🇲"},{c:"Canada",k:"Ottawa",f:"🇨🇦"},{c:"Central African Rep.",k:"Bangui",f:"🇨🇫"},{c:"Chad",k:"N'Djamena",f:"🇹🇩"},{c:"Chile",k:"Santiago",f:"🇨🇱"},
-{c:"China",k:"Beijing",f:"🇨🇳"},{c:"Colombia",k:"Bogotá",f:"🇨🇴"},{c:"Comoros",k:"Moroni",f:"🇰🇲"},{c:"Congo (DRC)",k:"Kinshasa",f:"🇨🇩"},{c:"Congo (Rep.)",k:"Brazzaville",f:"🇨🇬"},
-{c:"Costa Rica",k:"San José",f:"🇨🇷"},{c:"Croatia",k:"Zagreb",f:"🇭🇷"},{c:"Cuba",k:"Havana",f:"🇨🇺"},{c:"Cyprus",k:"Nicosia",f:"🇨🇾"},{c:"Czechia",k:"Prague",f:"🇨🇿"},
-{c:"Denmark",k:"Copenhagen",f:"🇩🇰"},{c:"Djibouti",k:"Djibouti",f:"🇩🇯"},{c:"Dominica",k:"Roseau",f:"🇩🇲"},{c:"Dominican Rep.",k:"Santo Domingo",f:"🇩🇴"},{c:"East Timor",k:"Dili",f:"🇹🇱"},
-{c:"Ecuador",k:"Quito",f:"🇪🇨"},{c:"Egypt",k:"Cairo",f:"🇪🇬"},{c:"El Salvador",k:"San Salvador",f:"🇸🇻"},{c:"Equatorial Guinea",k:"Malabo",f:"🇬🇶"},{c:"Eritrea",k:"Asmara",f:"🇪🇷"},
-{c:"Estonia",k:"Tallinn",f:"🇪🇪"},{c:"Eswatini",k:"Mbabane",f:"🇸🇿"},{c:"Ethiopia",k:"Addis Ababa",f:"🇪🇹"},{c:"Fiji",k:"Suva",f:"🇫🇯"},{c:"Finland",k:"Helsinki",f:"🇫🇮"},
-{c:"France",k:"Paris",f:"🇫🇷"},{c:"Gabon",k:"Libreville",f:"🇬🇦"},{c:"Gambia",k:"Banjul",f:"🇬🇲"},{c:"Georgia",k:"Tbilisi",f:"🇬🇪"},{c:"Germany",k:"Berlin",f:"🇩🇪"},
-{c:"Ghana",k:"Accra",f:"🇬🇭"},{c:"Greece",k:"Athens",f:"🇬🇷"},{c:"Grenada",k:"St. George's",f:"🇬🇩"},{c:"Guatemala",k:"Guatemala City",f:"🇬🇹"},{c:"Guinea",k:"Conakry",f:"🇬🇳"},
-{c:"Guinea-Bissau",k:"Bissau",f:"🇬🇼"},{c:"Guyana",k:"Georgetown",f:"🇬🇾"},{c:"Haiti",k:"Port-au-Prince",f:"🇭🇹"},{c:"Honduras",k:"Tegucigalpa",f:"🇭🇳"},{c:"Hungary",k:"Budapest",f:"🇭🇺"},
-{c:"Iceland",k:"Reykjavík",f:"🇮🇸"},{c:"India",k:"New Delhi",f:"🇮🇳"},{c:"Indonesia",k:"Jakarta",f:"🇮🇩"},{c:"Iran",k:"Tehran",f:"🇮🇷"},{c:"Iraq",k:"Baghdad",f:"🇮🇶"},
-{c:"Ireland",k:"Dublin",f:"🇮🇪"},{c:"Israel",k:"Jerusalem",f:"🇮🇱"},{c:"Italy",k:"Rome",f:"🇮🇹"},{c:"Ivory Coast",k:"Yamoussoukro",f:"🇨🇮"},{c:"Jamaica",k:"Kingston",f:"🇯🇲"},
-{c:"Japan",k:"Tokyo",f:"🇯🇵"},{c:"Jordan",k:"Amman",f:"🇯🇴"},{c:"Kazakhstan",k:"Astana",f:"🇰🇿"},{c:"Kenya",k:"Nairobi",f:"🇰🇪"},{c:"Kiribati",k:"Tarawa",f:"🇰🇮"},
-{c:"Kosovo",k:"Pristina",f:"🇽🇰"},{c:"Kuwait",k:"Kuwait City",f:"🇰🇼"},{c:"Kyrgyzstan",k:"Bishkek",f:"🇰🇬"},{c:"Laos",k:"Vientiane",f:"🇱🇦"},{c:"Latvia",k:"Riga",f:"🇱🇻"},
-{c:"Lebanon",k:"Beirut",f:"🇱🇧"},{c:"Lesotho",k:"Maseru",f:"🇱🇸"},{c:"Liberia",k:"Monrovia",f:"🇱🇷"},{c:"Libya",k:"Tripoli",f:"🇱🇾"},{c:"Liechtenstein",k:"Vaduz",f:"🇱🇮"},
-{c:"Lithuania",k:"Vilnius",f:"🇱🇹"},{c:"Luxembourg",k:"Luxembourg",f:"🇱🇺"},{c:"Madagascar",k:"Antananarivo",f:"🇲🇬"},{c:"Malawi",k:"Lilongwe",f:"🇲🇼"},{c:"Malaysia",k:"Kuala Lumpur",f:"🇲🇾"},
-{c:"Maldives",k:"Malé",f:"🇲🇻"},{c:"Mali",k:"Bamako",f:"🇲🇱"},{c:"Malta",k:"Valletta",f:"🇲🇹"},{c:"Marshall Islands",k:"Majuro",f:"🇲🇭"},{c:"Mauritania",k:"Nouakchott",f:"🇲🇷"},
-{c:"Mauritius",k:"Port Louis",f:"🇲🇺"},{c:"Mexico",k:"Mexico City",f:"🇲🇽"},{c:"Micronesia",k:"Palikir",f:"🇫🇯"},{c:"Moldova",k:"Chisinau",f:"🇲🇩"},{c:"Monaco",k:"Monaco",f:"🇲🇨"},
-{c:"Mongolia",k:"Ulaanbaatar",f:"🇲🇳"},{c:"Montenegro",k:"Podgorica",f:"🇲🇪"},{c:"Morocco",k:"Rabat",f:"🇲🇦"},{c:"Mozambique",k:"Maputo",f:"🇲🇿"},{c:"Myanmar",k:"Naypyidaw",f:"🇲🇲"},
-{c:"Namibia",k:"Windhoek",f:"🇳🇦"},{c:"Nauru",k:"Yaren",f:"🇳🇷"},{c:"Nepal",k:"Kathmandu",f:"🇳🇵"},{c:"Netherlands",k:"Amsterdam",f:"🇳🇱"},{c:"New Zealand",k:"Wellington",f:"🇳🇿"},
-{c:"Nicaragua",k:"Managua",f:"🇳🇮"},{c:"Niger",k:"Niamey",f:"🇳🇪"},{c:"Nigeria",k:"Abuja",f:"🇳🇬"},{c:"North Korea",k:"Pyongyang",f:"🇰🇵"},{c:"North Macedonia",k:"Skopje",f:"🇲🇰"},
-{c:"Norway",k:"Oslo",f:"🇳🇴"},{c:"Oman",k:"Muscat",f:"🇴🇲"},{c:"Pakistan",k:"Islamabad",f:"🇵🇰"},{c:"Palau",k:"Ngerulmud",f:"🇵🇼"},{c:"Palestine",k:"Ramallah",f:"🇵🇸"},
-{c:"Panama",k:"Panama City",f:"🇵🇦"},{c:"Papua New Guinea",k:"Port Moresby",f:"🇵🇬"},{c:"Paraguay",k:"Asunción",f:"🇵🇾"},{c:"Peru",k:"Lima",f:"🇵🇪"},{c:"Philippines",k:"Manila",f:"🇵🇭"},
-{c:"Poland",k:"Warsaw",f:"🇵🇱"},{c:"Portugal",k:"Lisbon",f:"🇵🇹"},{c:"Qatar",k:"Doha",f:"🇶🇦"},{c:"Romania",k:"Bucharest",f:"🇷🇴"},{c:"Russia",k:"Moscow",f:"🇷🇺"},
-{c:"Rwanda",k:"Kigali",f:"🇷🇼"},{c:"St. Kitts & Nevis",k:"Basseterre",f:"🇰🇳"},{c:"St. Lucia",k:"Castries",f:"🇱🇨"},{c:"St. Vincent",k:"Kingstown",f:"🇻🇨"},{c:"Samoa",k:"Apia",f:"🇼🇸"},
-{c:"San Marino",k:"San Marino",f:"🇸🇲"},{c:"Sao Tome & Principe",k:"Sao Tome",f:"🇸🇹"},{c:"Saudi Arabia",k:"Riyadh",f:"🇸🇦"},{c:"Senegal",k:"Dakar",f:"🇸🇳"},{c:"Serbia",k:"Belgrade",f:"🇷🇸"},
-{c:"Seychelles",k:"Victoria",f:"🇸🇨"},{c:"Sierra Leone",k:"Freetown",f:"🇸🇱"},{c:"Singapore",k:"Singapore",f:"🇸🇬"},{c:"Slovakia",k:"Bratislava",f:"🇸🇰"},{c:"Slovenia",k:"Ljubljana",f:"🇸🇮"},
-{c:"Solomon Islands",k:"Honiara",f:"🇸🇧"},{c:"Somalia",k:"Mogadishu",f:"🇸🇴"},{c:"South Africa",k:"Pretoria",f:"🇿🇦"},{c:"South Korea",k:"Seoul",f:"🇰🇷"},{c:"South Sudan",k:"Juba",f:"🇸🇸"},
-{c:"Spain",k:"Madrid",f:"🇪🇸"},{c:"Sri Lanka",k:"Colombo",f:"🇱🇰"},{c:"Sudan",k:"Khartoum",f:"🇸🇩"},{c:"Suriname",k:"Paramaribo",f:"🇸🇷"},{c:"Sweden",k:"Stockholm",f:"🇸🇪"},
-{c:"Switzerland",k:"Bern",f:"🇨🇭"},{c:"Syria",k:"Damascus",f:"🇸🇾"},{c:"Taiwan",k:"Taipei",f:"🇹🇼"},{c:"Tajikistan",k:"Dushanbe",f:"🇹🇯"},{c:"Tanzania",k:"Dodoma",f:"🇹🇿"},
-{c:"Thailand",k:"Bangkok",f:"🇹🇭"},{c:"Togo",k:"Lomé",f:"🇹🇬"},{c:"Tonga",k:"Nukuʻalofa",f:"🇹🇴"},{c:"Trinidad & Tobago",k:"Port of Spain",f:"🇹🇹"},{c:"Tunisia",k:"Tunis",f:"🇹🇳"},
-{c:"Türkiye",k:"Ankara",f:"🇹🇷"},{c:"Turkmenistan",k:"Ashgabat",f:"🇹🇲"},{c:"Tuvalu",k:"Funafuti",f:"🇹🇻"},{c:"Uganda",k:"Kampala",f:"🇺🇬"},{c:"Ukraine",k:"Kyiv",f:"🇺🇦"},
-{c:"UAE",k:"Abu Dhabi",f:"🇦🇪"},{c:"United Kingdom",k:"London",f:"🇬🇧"},{c:"United States",k:"Washington, D.C.",f:"🇺🇸"},{c:"Uruguay",k:"Montevideo",f:"🇺🇾"},{c:"Uzbekistan",k:"Tashkent",f:"🇺🇿"},
-{c:"Vanuatu",k:"Port Vila",f:"🇻🇺"},{c:"Vatican City",k:"Vatican City",f:"🇻🇦"},{c:"Venezuela",k:"Caracas",f:"🇻🇪"},{c:"Vietnam",k:"Hanoi",f:"🇻🇳"},{c:"Yemen",k:"Sana'a",f:"🇾🇪"},
-{c:"Zambia",k:"Lusaka",f:"🇿🇲"},{c:"Zimbabwe",k:"Harare",f:"🇿🇼"}
+{c:"Afghanistan",k:"Kabul",f:"🇦🇫",r:"AS"},{c:"Albania",k:"Tirana",f:"🇦🇱",r:"EU"},{c:"Algeria",k:"Algiers",f:"🇩🇿",r:"AF"},{c:"Andorra",k:"Andorra la Vella",f:"🇦🇩",r:"EU"},{c:"Angola",k:"Luanda",f:"🇦🇴",r:"AF"},
+{c:"Antigua & Barbuda",k:"Saint John's",f:"🇦🇬",r:"NA"},{c:"Argentina",k:"Buenos Aires",f:"🇦🇷",r:"SA"},{c:"Armenia",k:"Yerevan",f:"🇦🇲",r:"AS"},{c:"Australia",k:"Canberra",f:"🇦🇺",r:"OC"},{c:"Austria",k:"Vienna",f:"🇦🇹",r:"EU"},
+{c:"Azerbaijan",k:"Baku",f:"🇦🇿",r:"AS"},{c:"Bahamas",k:"Nassau",f:"🇧🇸",r:"NA"},{c:"Bahrain",k:"Manama",f:"🇧🇭",r:"AS"},{c:"Bangladesh",k:"Dhaka",f:"🇧🇩",r:"AS"},{c:"Barbados",k:"Bridgetown",f:"🇧🇧",r:"NA"},
+{c:"Belarus",k:"Minsk",f:"🇧🇾",r:"EU"},{c:"Belgium",k:"Brussels",f:"🇧🇪",r:"EU"},{c:"Belize",k:"Belmopan",f:"🇧🇿",r:"NA"},{c:"Benin",k:"Porto-Novo",f:"🇧🇯",r:"AF"},{c:"Bhutan",k:"Thimphu",f:"🇧🇹",r:"AS"},
+{c:"Bolivia",k:"Sucre",f:"🇧🇴",r:"SA"},{c:"Bosnia & Herzegovina",k:"Sarajevo",f:"🇧🇦",r:"EU"},{c:"Botswana",k:"Gaborone",f:"🇧🇼",r:"AF"},{c:"Brazil",k:"Brasília",f:"🇧🇷",r:"SA"},{c:"Brunei",k:"Bandar Seri Begawan",f:"🇧🇳",r:"AS"},
+{c:"Bulgaria",k:"Sofia",f:"🇧🇬",r:"EU"},{c:"Burkina Faso",k:"Ouagadougou",f:"🇧🇫",r:"AF"},{c:"Burundi",k:"Gitega",f:"🇧🇮",r:"AF"},{c:"Cabo Verde",k:"Praia",f:"🇨🇻",r:"AF"},{c:"Cambodia",k:"Phnom Penh",f:"🇰🇭",r:"AS"},
+{c:"Cameroon",k:"Yaoundé",f:"🇨🇲",r:"AF"},{c:"Canada",k:"Ottawa",f:"🇨🇦",r:"NA"},{c:"Central African Rep.",k:"Bangui",f:"🇨🇫",r:"AF"},{c:"Chad",k:"N'Djamena",f:"🇹🇩",r:"AF"},{c:"Chile",k:"Santiago",f:"🇨🇱",r:"SA"},
+{c:"China",k:"Beijing",f:"🇨🇳",r:"AS"},{c:"Colombia",k:"Bogotá",f:"🇨🇴",r:"SA"},{c:"Comoros",k:"Moroni",f:"🇰🇲",r:"AF"},{c:"Congo (DRC)",k:"Kinshasa",f:"🇨🇩",r:"AF"},{c:"Congo (Rep.)",k:"Brazzaville",f:"🇨🇬",r:"AF"},
+{c:"Costa Rica",k:"San José",f:"🇨🇷",r:"NA"},{c:"Croatia",k:"Zagreb",f:"🇭🇷",r:"EU"},{c:"Cuba",k:"Havana",f:"🇨🇺",r:"NA"},{c:"Cyprus",k:"Nicosia",f:"🇨🇾",r:"EU"},{c:"Czechia",k:"Prague",f:"🇨🇿",r:"EU"},
+{c:"Denmark",k:"Copenhagen",f:"🇩🇰",r:"EU"},{c:"Djibouti",k:"Djibouti",f:"🇩🇯",r:"AF"},{c:"Dominica",k:"Roseau",f:"🇩🇲",r:"NA"},{c:"Dominican Rep.",k:"Santo Domingo",f:"🇩🇴",r:"NA"},{c:"East Timor",k:"Dili",f:"🇹🇱",r:"AS"},
+{c:"Ecuador",k:"Quito",f:"🇪🇨",r:"SA"},{c:"Egypt",k:"Cairo",f:"🇪🇬",r:"AF"},{c:"El Salvador",k:"San Salvador",f:"🇸🇻",r:"NA"},{c:"Equatorial Guinea",k:"Malabo",f:"🇬🇶",r:"AF"},{c:"Eritrea",k:"Asmara",f:"🇪🇷",r:"AF"},
+{c:"Estonia",k:"Tallinn",f:"🇪🇪",r:"EU"},{c:"Eswatini",k:"Mbabane",f:"🇸🇿",r:"AF"},{c:"Ethiopia",k:"Addis Ababa",f:"🇪🇹",r:"AF"},{c:"Fiji",k:"Suva",f:"🇫🇯",r:"OC"},{c:"Finland",k:"Helsinki",f:"🇫🇮",r:"EU"},
+{c:"France",k:"Paris",f:"🇫🇷",r:"EU"},{c:"Gabon",k:"Libreville",f:"🇬🇦",r:"AF"},{c:"Gambia",k:"Banjul",f:"🇬🇲",r:"AF"},{c:"Georgia",k:"Tbilisi",f:"🇬🇪",r:"AS"},{c:"Germany",k:"Berlin",f:"🇩🇪",r:"EU"},
+{c:"Ghana",k:"Accra",f:"🇬🇭",r:"AF"},{c:"Greece",k:"Athens",f:"🇬🇷",r:"EU"},{c:"Grenada",k:"St. George's",f:"🇬🇩",r:"NA"},{c:"Guatemala",k:"Guatemala City",f:"🇬🇹",r:"NA"},{c:"Guinea",k:"Conakry",f:"🇬🇳",r:"AF"},
+{c:"Guinea-Bissau",k:"Bissau",f:"🇬🇼",r:"AF"},{c:"Guyana",k:"Georgetown",f:"🇬🇾",r:"SA"},{c:"Haiti",k:"Port-au-Prince",f:"🇭🇹",r:"NA"},{c:"Honduras",k:"Tegucigalpa",f:"🇭🇳",r:"NA"},{c:"Hungary",k:"Budapest",f:"🇭🇺",r:"EU"},
+{c:"Iceland",k:"Reykjavík",f:"🇮🇸",r:"EU"},{c:"India",k:"New Delhi",f:"🇮🇳",r:"AS"},{c:"Indonesia",k:"Jakarta",f:"🇮🇩",r:"AS"},{c:"Iran",k:"Tehran",f:"🇮🇷",r:"AS"},{c:"Iraq",k:"Baghdad",f:"🇮🇶",r:"AS"},
+{c:"Ireland",k:"Dublin",f:"🇮🇪",r:"EU"},{c:"Israel",k:"Jerusalem",f:"🇮🇱",r:"AS"},{c:"Italy",k:"Rome",f:"🇮🇹",r:"EU"},{c:"Ivory Coast",k:"Yamoussoukro",f:"🇨🇮",r:"AF"},{c:"Jamaica",k:"Kingston",f:"🇯🇲",r:"NA"},
+{c:"Japan",k:"Tokyo",f:"🇯🇵",r:"AS"},{c:"Jordan",k:"Amman",f:"🇯🇴",r:"AS"},{c:"Kazakhstan",k:"Astana",f:"🇰🇿",r:"AS"},{c:"Kenya",k:"Nairobi",f:"🇰🇪",r:"AF"},{c:"Kiribati",k:"Tarawa",f:"🇰🇮",r:"OC"},
+{c:"Kosovo",k:"Pristina",f:"🇽🇰",r:"EU"},{c:"Kuwait",k:"Kuwait City",f:"🇰🇼",r:"AS"},{c:"Kyrgyzstan",k:"Bishkek",f:"🇰🇬",r:"AS"},{c:"Laos",k:"Vientiane",f:"🇱🇦",r:"AS"},{c:"Latvia",k:"Riga",f:"🇱🇻",r:"EU"},
+{c:"Lebanon",k:"Beirut",f:"🇱🇧",r:"AS"},{c:"Lesotho",k:"Maseru",f:"🇱🇸",r:"AF"},{c:"Liberia",k:"Monrovia",f:"🇱🇷",r:"AF"},{c:"Libya",k:"Tripoli",f:"🇱🇾",r:"AF"},{c:"Liechtenstein",k:"Vaduz",f:"🇱🇮",r:"EU"},
+{c:"Lithuania",k:"Vilnius",f:"🇱🇹",r:"EU"},{c:"Luxembourg",k:"Luxembourg",f:"🇱🇺",r:"EU"},{c:"Madagascar",k:"Antananarivo",f:"🇲🇬",r:"AF"},{c:"Malawi",k:"Lilongwe",f:"🇲🇼",r:"AF"},{c:"Malaysia",k:"Kuala Lumpur",f:"🇲🇾",r:"AS"},
+{c:"Maldives",k:"Malé",f:"🇲🇻",r:"AS"},{c:"Mali",k:"Bamako",f:"🇲🇱",r:"AF"},{c:"Malta",k:"Valletta",f:"🇲🇹",r:"EU"},{c:"Marshall Islands",k:"Majuro",f:"🇲🇭",r:"OC"},{c:"Mauritania",k:"Nouakchott",f:"🇲🇷",r:"AF"},
+{c:"Mauritius",k:"Port Louis",f:"🇲🇺",r:"AF"},{c:"Mexico",k:"Mexico City",f:"🇲🇽",r:"NA"},{c:"Micronesia",k:"Palikir",f:"🇫🇲",r:"OC"},{c:"Moldova",k:"Chisinau",f:"🇲🇩",r:"EU"},{c:"Monaco",k:"Monaco",f:"🇲🇨",r:"EU"},
+{c:"Mongolia",k:"Ulaanbaatar",f:"🇲🇳",r:"AS"},{c:"Montenegro",k:"Podgorica",f:"🇲🇪",r:"EU"},{c:"Morocco",k:"Rabat",f:"🇲🇦",r:"AF"},{c:"Mozambique",k:"Maputo",f:"🇲🇿",r:"AF"},{c:"Myanmar",k:"Naypyidaw",f:"🇲🇲",r:"AS"},
+{c:"Namibia",k:"Windhoek",f:"🇳🇦",r:"AF"},{c:"Nauru",k:"Yaren",f:"🇳🇷",r:"OC"},{c:"Nepal",k:"Kathmandu",f:"🇳🇵",r:"AS"},{c:"Netherlands",k:"Amsterdam",f:"🇳🇱",r:"EU"},{c:"New Zealand",k:"Wellington",f:"🇳🇿",r:"OC"},
+{c:"Nicaragua",k:"Managua",f:"🇳🇮",r:"NA"},{c:"Niger",k:"Niamey",f:"🇳🇪",r:"AF"},{c:"Nigeria",k:"Abuja",f:"🇳🇬",r:"AF"},{c:"North Korea",k:"Pyongyang",f:"🇰🇵",r:"AS"},{c:"North Macedonia",k:"Skopje",f:"🇲🇰",r:"EU"},
+{c:"Norway",k:"Oslo",f:"🇳🇴",r:"EU"},{c:"Oman",k:"Muscat",f:"🇴🇲",r:"AS"},{c:"Pakistan",k:"Islamabad",f:"🇵🇰",r:"AS"},{c:"Palau",k:"Ngerulmud",f:"🇵🇼",r:"OC"},{c:"Palestine",k:"Ramallah",f:"🇵🇸",r:"AS"},
+{c:"Panama",k:"Panama City",f:"🇵🇦",r:"NA"},{c:"Papua New Guinea",k:"Port Moresby",f:"🇵🇬",r:"OC"},{c:"Paraguay",k:"Asunción",f:"🇵🇾",r:"SA"},{c:"Peru",k:"Lima",f:"🇵🇪",r:"SA"},{c:"Philippines",k:"Manila",f:"🇵🇭",r:"AS"},
+{c:"Poland",k:"Warsaw",f:"🇵🇱",r:"EU"},{c:"Portugal",k:"Lisbon",f:"🇵🇹",r:"EU"},{c:"Qatar",k:"Doha",f:"🇶🇦",r:"AS"},{c:"Romania",k:"Bucharest",f:"🇷🇴",r:"EU"},{c:"Russia",k:"Moscow",f:"🇷🇺",r:"EU"},
+{c:"Rwanda",k:"Kigali",f:"🇷🇼",r:"AF"},{c:"St. Kitts & Nevis",k:"Basseterre",f:"🇰🇳",r:"NA"},{c:"St. Lucia",k:"Castries",f:"🇱🇨",r:"NA"},{c:"St. Vincent",k:"Kingstown",f:"🇻🇨",r:"NA"},{c:"Samoa",k:"Apia",f:"🇼🇸",r:"OC"},
+{c:"San Marino",k:"San Marino",f:"🇸🇲",r:"EU"},{c:"Sao Tome & Principe",k:"Sao Tome",f:"🇸🇹",r:"AF"},{c:"Saudi Arabia",k:"Riyadh",f:"🇸🇦",r:"AS"},{c:"Senegal",k:"Dakar",f:"🇸🇳",r:"AF"},{c:"Serbia",k:"Belgrade",f:"🇷🇸",r:"EU"},
+{c:"Seychelles",k:"Victoria",f:"🇸🇨",r:"AF"},{c:"Sierra Leone",k:"Freetown",f:"🇸🇱",r:"AF"},{c:"Singapore",k:"Singapore",f:"🇸🇬",r:"AS"},{c:"Slovakia",k:"Bratislava",f:"🇸🇰",r:"EU"},{c:"Slovenia",k:"Ljubljana",f:"🇸🇮",r:"EU"},
+{c:"Solomon Islands",k:"Honiara",f:"🇸🇧",r:"OC"},{c:"Somalia",k:"Mogadishu",f:"🇸🇴",r:"AF"},{c:"South Africa",k:"Pretoria",f:"🇿🇦",r:"AF"},{c:"South Korea",k:"Seoul",f:"🇰🇷",r:"AS"},{c:"South Sudan",k:"Juba",f:"🇸🇸",r:"AF"},
+{c:"Spain",k:"Madrid",f:"🇪🇸",r:"EU"},{c:"Sri Lanka",k:"Colombo",f:"🇱🇰",r:"AS"},{c:"Sudan",k:"Khartoum",f:"🇸🇩",r:"AF"},{c:"Suriname",k:"Paramaribo",f:"🇸🇷",r:"SA"},{c:"Sweden",k:"Stockholm",f:"🇸🇪",r:"EU"},
+{c:"Switzerland",k:"Bern",f:"🇨🇭",r:"EU"},{c:"Syria",k:"Damascus",f:"🇸🇾",r:"AS"},{c:"Taiwan",k:"Taipei",f:"🇹🇼",r:"AS"},{c:"Tajikistan",k:"Dushanbe",f:"🇹🇯",r:"AS"},{c:"Tanzania",k:"Dodoma",f:"🇹🇿",r:"AF"},
+{c:"Thailand",k:"Bangkok",f:"🇹🇭",r:"AS"},{c:"Togo",k:"Lomé",f:"🇹🇬",r:"AF"},{c:"Tonga",k:"Nukuʻalofa",f:"🇹🇴",r:"OC"},{c:"Trinidad & Tobago",k:"Port of Spain",f:"🇹🇹",r:"NA"},{c:"Tunisia",k:"Tunis",f:"🇹🇳",r:"AF"},
+{c:"Türkiye",k:"Ankara",f:"🇹🇷",r:"AS"},{c:"Turkmenistan",k:"Ashgabat",f:"🇹🇲",r:"AS"},{c:"Tuvalu",k:"Funafuti",f:"🇹🇻",r:"OC"},{c:"Uganda",k:"Kampala",f:"🇺🇬",r:"AF"},{c:"Ukraine",k:"Kyiv",f:"🇺🇦",r:"EU"},
+{c:"UAE",k:"Abu Dhabi",f:"🇦🇪",r:"AS"},{c:"United Kingdom",k:"London",f:"🇬🇧",r:"EU"},{c:"United States",k:"Washington, D.C.",f:"🇺🇸",r:"NA"},{c:"Uruguay",k:"Montevideo",f:"🇺🇾",r:"SA"},{c:"Uzbekistan",k:"Tashkent",f:"🇺🇿",r:"AS"},
+{c:"Vanuatu",k:"Port Vila",f:"🇻🇺",r:"OC"},{c:"Vatican City",k:"Vatican City",f:"🇻🇦",r:"EU"},{c:"Venezuela",k:"Caracas",f:"🇻🇪",r:"SA"},{c:"Vietnam",k:"Hanoi",f:"🇻🇳",r:"AS"},{c:"Yemen",k:"Sana'a",f:"🇾🇪",r:"AS"},
+{c:"Zambia",k:"Lusaka",f:"🇿🇲",r:"AF"},{c:"Zimbabwe",k:"Harare",f:"🇿🇼",r:"AF"}
 ];
 
 // --- POLYPHONIC AUDIO SETUP ---
@@ -329,7 +330,6 @@ const volumes = {
     victory: 0.8
 };
 
-// Pre-load the "master" tracks
 const masters = {};
 for(let k in soundFiles) {
     const a = new Audio(soundFiles[k]);
@@ -338,26 +338,18 @@ for(let k in soundFiles) {
     masters[k] = a;
 }
 
-// "Unlock" audio on first touch (Mobile Fix)
 let audioUnlocked = false;
 function unlockAudio() {
     if(audioUnlocked) return;
-    
     for(let k in masters) {
-        // 1. MUTE the master track before the warm-up play
         masters[k].muted = true; 
-        
         masters[k].play().then(() => {
-            // 2. Pause immediately
             masters[k].pause();
             masters[k].currentTime = 0;
-            
-            // 3. UNMUTE it so it's ready for the game
             masters[k].muted = false;
             masters[k].volume = volumes[k]; 
-        }).catch(()=>{/*Ignore errors*/});
+        }).catch(()=>{});
     }
-    
     audioUnlocked = true;
     document.removeEventListener('click', unlockAudio);
     document.removeEventListener('touchstart', unlockAudio);
@@ -370,11 +362,8 @@ function playSound(type) {
     const master = masters[type];
     if(master) {
         const clone = master.cloneNode(); 
-        // Ensure clone volume matches config
         clone.volume = volumes[type] || 0.5;
-        // Ensure clone is not muted (just in case)
         clone.muted = false; 
-        
         clone.play().catch(e => console.warn('Audio blocked', e));
         clone.onended = () => { clone.remove(); };
     }
@@ -409,7 +398,7 @@ function loadQ() {
         
         document.getElementById('prog-bar').classList.remove('draining', 'pulse-active');
         
-        // --- VICTORY CHECK ---
+        // Victory Check
         if(pool.length === 0 && streak === d.length) {
             triggerVictory();
             return;
@@ -424,9 +413,21 @@ function loadQ() {
         document.getElementById('q-text').innerText = q.c;
         document.getElementById('q-flag').innerText = q.f;
 
-        let opts = d.filter(x=>x.k!==q.k).sort(()=>Math.random()-0.5).slice(0,3);
+        // NEW LOGIC: Filter distractors by Region (r)
+        // 1. Get all countries that share the region (q.r) but are NOT the correct answer
+        let sameRegion = d.filter(x => x.r === q.r && x.k !== q.k);
+        
+        // 2. Shuffle them
+        sameRegion.sort(() => Math.random() - 0.5);
+        
+        // 3. Take 3
+        let opts = sameRegion.slice(0, 3);
+        
+        // 4. Add correct answer
         opts.push(q);
-        opts.sort(()=>Math.random()-0.5);
+        
+        // 5. Shuffle final options so correct answer isn't always last
+        opts.sort(() => Math.random() - 0.5);
 
         opts.forEach(o=>{
             let b = document.createElement('div');
@@ -454,7 +455,6 @@ function check(btn, ans) {
         
         setTimeout(() => {
             updateBar(true); 
-            // Check victory *after* bar update visually
             if(streak === d.length) {
                 setTimeout(triggerVictory, 600);
             } else {
@@ -466,18 +466,17 @@ function check(btn, ans) {
         // WRONG
         btn.classList.add('wrong', 'shake');
         
-        // STREAK LOSS LOGIC
         if(streak > 10) {
-            playSound('shatter'); // DRAMATIC SOUND
+            playSound('shatter'); 
             document.getElementById('vignette').style.opacity = '1';
             document.getElementById('vignette').classList.add('throb');
             setTimeout(()=>{
                  document.getElementById('vignette').style.opacity = '0';
                  document.getElementById('vignette').classList.remove('throb');
             }, 1200);
-            if(navigator.vibrate) navigator.vibrate(200); // Heavy vibrate
+            if(navigator.vibrate) navigator.vibrate(200); 
         } else {
-            playSound('wrong'); // NORMAL SOUND
+            playSound('wrong'); 
             if(navigator.vibrate) navigator.vibrate([40,40]);
         }
 
@@ -501,7 +500,6 @@ function triggerVictory() {
     playSound('victory');
     const screen = document.getElementById('victory-screen');
     screen.classList.add('show');
-    // Optional: confetti or particles could go here
 }
 
 function restartGame() {
@@ -509,8 +507,10 @@ function restartGame() {
     resetDeck();
     updateBar(false);
     document.getElementById('victory-screen').classList.remove('show');
-    sounds.victory.pause();
-    sounds.victory.currentTime = 0;
+    const vic = masters['victory']; 
+    // We access master directly to stop loop/long play
+    vic.pause();
+    vic.currentTime = 0;
     loadQ();
 }
 
