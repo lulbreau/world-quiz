@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>World Quiz</title>
+    <link rel="icon" href="https://cdnjs.cloudflare.com/ajax/libs/twemoji/14.0.2/72x72/1f30d.png">
+    <link rel="apple-touch-icon" href="https://cdnjs.cloudflare.com/ajax/libs/twemoji/14.0.2/72x72/1f30d.png">
+    <style>
+        body {
+            background-color: #121212;
+            color: white;
+            font-family: sans-serif;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            padding: 20px;
+        }
+        .card {
+            font-size: 2rem;
+            font-weight: bold;
+            margin: 30px 0;
+            color: #5c7cfa;
+        }
+        button {
+            background: #2a2a2a;
+            color: white;
+            border: 1px solid #444;
+            padding: 15px;
+            width: 100%;
+            max-width: 400px;
+            margin: 5px 0;
+            border-radius: 10px;
+            font-size: 1.1rem;
+        }
+        button.correct { background: #2f9e44; border-color: #2f9e44; }
+        button.wrong { background: #e03131; border-color: #e03131; }
+    </style>
+</head>
+<body>
+    <h1>World Quiz</h1>
+    <div id="streak">Streak: 0</div>
+    <div class="card" id="question">Loading...</div>
+    <div id="options"></div>
+
+    <script>
+        // STARTING WITH JUST 5 COUNTRIES TO TEST
+        const data = [
+            {country: "France", capital: "Paris"},
+            {country: "Japan", capital: "Tokyo"},
+            {country: "Brazil", capital: "Brasília"},
+            {country: "Egypt", capital: "Cairo"},
+            {country: "Australia", capital: "Canberra"}
+        ];
+
+        let currentStreak = 0;
+
+        function loadQuestion() {
+            const container = document.getElementById('options');
+            container.innerHTML = '';
+            
+            // Pick Random
+            const item = data[Math.floor(Math.random() * data.length)];
+            document.getElementById('question').innerText = item.country;
+            
+            // Create Options
+            const distractors = data.filter(d => d.capital !== item.capital)
+                                    .sort(() => Math.random() - 0.5).slice(0, 3);
+            const options = [item, ...distractors].sort(() => Math.random() - 0.5);
+
+            options.forEach(opt => {
+                const btn = document.createElement('button');
+                btn.innerText = opt.capital;
+                btn.onclick = () => {
+                    if(opt.capital === item.capital) {
+                        btn.className = 'correct';
+                        currentStreak++;
+                        setTimeout(loadQuestion, 800);
+                    } else {
+                        btn.className = 'wrong';
+                        currentStreak = 0;
+                    }
+                    document.getElementById('streak').innerText = "Streak: " + currentStreak;
+                };
+                container.appendChild(btn);
+            });
+        }
+        loadQuestion();
+    </script>
+</body>
+</html>
