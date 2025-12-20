@@ -492,7 +492,7 @@ function check(btn, ans) {
         if(navigator.vibrate) navigator.vibrate(10);
         
         // --- COMBO CHECK (< 3000ms) ---
-        if(elapsed < 10000) {
+        if(elapsed < 3500) {
             combo++;
             // Vignette Visuals
             const vig = document.getElementById('combo-vignette');
