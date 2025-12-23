@@ -436,100 +436,130 @@ const d=[
 {c:"Zambia",k:"Lusaka",f:"🇿🇲",r:"AF"},{c:"Zimbabwe",k:"Harare",f:"🇿🇼",r:"AF"}
 ];
 
-// --- AUDIO SYSTEM ---
+// --- AUDIO SYSTEM (DEBUG VERSION) ---
 const soundFiles = {
     click:   'click.mp3',
     correct: 'correct.mp3',
     wrong:   'wrong.mp3',
     shatter: 'shatter.mp3',
     victory: 'victory.mp3',
-    combo:   'combo.mp3',   // Intense (8-17)
-    combo2:  'combo2.mp3',  // Mild (4-7) & Turbo
+    combo:   'combo.mp3',
+    combo2:  'combo2.mp3',
     fire:    'fire.mp3',
     negative:'negative.mp3'
 };
 
 const volumes = {
-    click: 0.5,
-    correct: 0.5,
-    wrong: 0.5,
-    shatter: 0.7,
-    victory: 0.8,
-    combo: 0.6,
-    combo2: 0.6,
-    fire: 0.3,
-    negative: 0.6
+    click: 0.5, correct: 0.5, wrong: 0.5, shatter: 0.7,
+    victory: 0.8, combo: 0.6, combo2: 0.6, fire: 0.3, negative: 0.6
 };
 
 const masters = {};
-// SAFE LOADING
+
+// Load files with Error Logging
 for(let k in soundFiles) {
-    try {
-        const a = new Audio(soundFiles[k]);
-        a.preload = 'auto'; 
-        a.load();
-        masters[k] = a;
-    } catch(e) { console.warn("Missing Audio:", k); }
+    const a = new Audio(soundFiles[k]);
+    a.preload = 'auto'; 
+    a.load();
+    
+    // Log if file is missing/broken
+    a.onerror = () => console.error(`Audio Error: Could not load ${k} (${soundFiles[k]})`);
+    
+    masters[k] = a;
 }
 
-// SAFE LOOP SETTING
 if(masters['fire']) masters['fire'].loop = true;
 
+// Aggressive Unlocker for Mobile/Safari
 let audioUnlocked = false;
 function unlockAudio() {
     if(audioUnlocked) return;
+    
+    // Create an empty buffer to force the audio engine awake
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    if (AudioContext) {
+        const ctx = new AudioContext();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        gain.gain.value = 0; // Silent
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(0);
+        osc.stop(0.001);
+    }
+
+    // Also try to play/pause all tracks
     for(let k in masters) {
         if(!masters[k]) continue;
         masters[k].muted = true; 
-        masters[k].play().then(() => {
-            masters[k].pause();
-            masters[k].currentTime = 0;
-            masters[k].muted = false;
-            masters[k].volume = volumes[k]; 
-        }).catch(()=>{});
+        const p = masters[k].play();
+        if(p !== undefined) {
+            p.then(() => {
+                masters[k].pause();
+                masters[k].currentTime = 0;
+                masters[k].muted = false;
+                masters[k].volume = volumes[k] || 0.5;
+            }).catch(e => console.log("Unlock skipped for " + k));
+        }
     }
+    
     audioUnlocked = true;
+    console.log("Audio Engine Unlocked");
     document.removeEventListener('click', unlockAudio);
     document.removeEventListener('touchstart', unlockAudio);
 }
+
 document.addEventListener('click', unlockAudio);
 document.addEventListener('touchstart', unlockAudio);
 
 function playSound(type, playbackRate = 1.0) {
     const master = masters[type];
-    if(master) {
+    // Check if file exists and is ready
+    if(master && master.readyState >= 2) {
         const clone = master.cloneNode(); 
         clone.volume = volumes[type] || 0.5;
         clone.muted = false; 
+        
         if(playbackRate !== 1.0) {
             clone.playbackRate = playbackRate;
             clone.preservesPitch = false; 
         }
-        clone.play().catch(e => console.warn('Audio blocked', e));
+        
+        clone.play().catch(e => console.warn('Playback failed:', e));
         clone.onended = () => { clone.remove(); };
+    } else {
+        console.warn(`Sound not ready or missing: ${type}`);
     }
 }
 
 function manageFire(on, comboCount = 0) {
     const f = masters['fire'];
     if(!f) return;
+    
     if(on) {
+        // Calculate volume boost
         let boost = 0;
         if(comboCount >= 8 && comboCount < 18) {
             boost = (comboCount - 7) * 0.05 * 0.3; 
         } else if(comboCount >= 18) {
             boost = 0.15; 
         }
+        
         let newVol = 0.3 + boost;
         if(newVol > 1) newVol = 1;
+        
+        // Apply volume to master element since loops don't clone well
         f.volume = newVol;
-        if(f.paused) f.play().catch(()=>{});
+        f.muted = false;
+        
+        if(f.paused) {
+            f.play().catch(e => console.warn("Fire blocked", e));
+        }
     } else {
         f.pause();
         f.currentTime = 0;
     }
 }
-// -------------------
 
 let pool = []; 
 let streak = 0; 
