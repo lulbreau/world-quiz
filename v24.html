@@ -436,7 +436,7 @@ const d=[
 {c:"Zambia",k:"Lusaka",f:"🇿🇲",r:"AF"},{c:"Zimbabwe",k:"Harare",f:"🇿🇼",r:"AF"}
 ];
 
-// --- AUDIO SYSTEM (DEBUG VERSION) ---
+// --- AUDIO SYSTEM (LAZY LOAD FIX) ---
 const soundFiles = {
     click:   'click.mp3',
     correct: 'correct.mp3',
@@ -454,68 +454,59 @@ const volumes = {
     victory: 0.8, combo: 0.6, combo2: 0.6, fire: 0.3, negative: 0.6
 };
 
+// Masters start empty to prevent browser blocking on load
 const masters = {};
+let audioInitialized = false;
 
-// Load files with Error Logging
-for(let k in soundFiles) {
-    const a = new Audio(soundFiles[k]);
-    a.preload = 'auto'; 
-    a.load();
+// Initialize Audio ONLY on user interaction
+function initAudioSystem() {
+    if(audioInitialized) return;
     
-    // Log if file is missing/broken
-    a.onerror = () => console.error(`Audio Error: Could not load ${k} (${soundFiles[k]})`);
+    console.log("Initializing Audio...");
     
-    masters[k] = a;
-}
-
-if(masters['fire']) masters['fire'].loop = true;
-
-// Aggressive Unlocker for Mobile/Safari
-let audioUnlocked = false;
-function unlockAudio() {
-    if(audioUnlocked) return;
-    
-    // Create an empty buffer to force the audio engine awake
-    const AudioContext = window.AudioContext || window.webkitAudioContext;
-    if (AudioContext) {
-        const ctx = new AudioContext();
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-        gain.gain.value = 0; // Silent
-        osc.connect(gain);
-        gain.connect(ctx.destination);
-        osc.start(0);
-        osc.stop(0.001);
+    for(let k in soundFiles) {
+        const a = new Audio(soundFiles[k]);
+        a.preload = 'auto';
+        a.volume = volumes[k] || 0.5;
+        
+        // Error logger
+        a.onerror = () => console.error("Missing/Bad File:", soundFiles[k]);
+        
+        masters[k] = a;
     }
+    
+    if(masters['fire']) masters['fire'].loop = true;
 
-    // Also try to play/pause all tracks
+    // Play silent sounds to unlock iOS
     for(let k in masters) {
-        if(!masters[k]) continue;
-        masters[k].muted = true; 
         const p = masters[k].play();
         if(p !== undefined) {
             p.then(() => {
                 masters[k].pause();
                 masters[k].currentTime = 0;
-                masters[k].muted = false;
-                masters[k].volume = volumes[k] || 0.5;
-            }).catch(e => console.log("Unlock skipped for " + k));
+            }).catch(e => console.log("Unlock buffer: " + e));
         }
     }
+
+    audioInitialized = true;
+    console.log("Audio System Ready.");
     
-    audioUnlocked = true;
-    console.log("Audio Engine Unlocked");
-    document.removeEventListener('click', unlockAudio);
-    document.removeEventListener('touchstart', unlockAudio);
+    // Remove listeners so we don't re-init
+    document.removeEventListener('click', initAudioSystem);
+    document.removeEventListener('touchstart', initAudioSystem);
 }
 
-document.addEventListener('click', unlockAudio);
-document.addEventListener('touchstart', unlockAudio);
+// Bind initialization to the first touch/click anywhere
+document.addEventListener('click', initAudioSystem);
+document.addEventListener('touchstart', initAudioSystem);
 
 function playSound(type, playbackRate = 1.0) {
+    // If sound tries to play before init, try to init now
+    if(!audioInitialized) initAudioSystem();
+
     const master = masters[type];
-    // Check if file exists and is ready
-    if(master && master.readyState >= 2) {
+    if(master) {
+        // Clone for polyphony (overlapping sounds)
         const clone = master.cloneNode(); 
         clone.volume = volumes[type] || 0.5;
         clone.muted = false; 
@@ -525,19 +516,25 @@ function playSound(type, playbackRate = 1.0) {
             clone.preservesPitch = false; 
         }
         
-        clone.play().catch(e => console.warn('Playback failed:', e));
+        const playPromise = clone.play();
+        if (playPromise !== undefined) {
+            playPromise.catch(error => {
+                console.warn(`Playback blocked for ${type}:`, error);
+            });
+        }
+        
         clone.onended = () => { clone.remove(); };
-    } else {
-        console.warn(`Sound not ready or missing: ${type}`);
     }
 }
 
 function manageFire(on, comboCount = 0) {
+    if(!audioInitialized) return; // Ignore if not ready
+    
     const f = masters['fire'];
     if(!f) return;
-    
+
     if(on) {
-        // Calculate volume boost
+        // Calculate dynamic volume
         let boost = 0;
         if(comboCount >= 8 && comboCount < 18) {
             boost = (comboCount - 7) * 0.05 * 0.3; 
@@ -548,19 +545,17 @@ function manageFire(on, comboCount = 0) {
         let newVol = 0.3 + boost;
         if(newVol > 1) newVol = 1;
         
-        // Apply volume to master element since loops don't clone well
+        // Master element is used for looping (clones don't loop reliably)
         f.volume = newVol;
-        f.muted = false;
         
         if(f.paused) {
-            f.play().catch(e => console.warn("Fire blocked", e));
+            f.play().catch(e => console.warn("Fire loop blocked:", e));
         }
     } else {
         f.pause();
         f.currentTime = 0;
     }
 }
-
 let pool = []; 
 let streak = 0; 
 let combo = 0; 
