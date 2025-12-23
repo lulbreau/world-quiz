@@ -1,0 +1,841 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>Capidle</title>
+<link rel="icon" href="https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/72x72/1f30d.png">
+<style>
+    :root { 
+        --primary: #94a3b8; 
+        --correct: #004225; 
+        --wrong: #C80815;   
+        --bg-grad: linear-gradient(180deg, #18181b, #27272a);
+        --card-bg: #27272a;
+        --border: #3f3f46;
+        --bar-bg: #3f3f46;
+        --aura-green: #1a8d57;
+    }
+
+    body {
+        margin: 0;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        background: var(--bg-grad);
+        color: #e4e4e7;
+        min-height: 100vh; 
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        overflow-y: auto; 
+        -webkit-overflow-scrolling: touch;
+        padding-bottom: 60px;
+    }
+
+    /* LOADING SCREEN */
+    #loading-screen {
+        position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+        z-index: 3000;
+        background: #18181b;
+        display: flex; flex-direction: column; 
+        align-items: center; justify-content: center;
+        transition: opacity 0.5s ease;
+    }
+    .load-title {
+        font-size: 3rem; font-weight: 900; letter-spacing: -2px;
+        background: linear-gradient(to right, #fff, #999);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        animation: pulseText 1.5s infinite alternate;
+    }
+    #error-log {
+        color: #ff5555; margin-top: 20px; font-family: monospace; 
+        text-align: center; max-width: 80%;
+    }
+    @keyframes pulseText { from { opacity: 0.6; } to { opacity: 1; } }
+
+    /* RED VIGNETTE (DAMAGE) */
+    #vignette {
+        position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+        pointer-events: none; z-index: 999;
+        background: radial-gradient(circle, transparent 40%, rgba(160, 10, 10, 0.9));
+        opacity: 0; transition: opacity 0.3s;
+    }
+    .throb { animation: throbAnim 1.2s ease-out; }
+    @keyframes throbAnim {
+        0% { opacity: 0; }
+        15% { opacity: 1; }
+        50% { opacity: 0.6; }
+        80% { opacity: 0.9; }
+        100% { opacity: 0; }
+    }
+
+    /* COMBO VIGNETTE BASE */
+    #combo-vignette {
+        position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+        pointer-events: none; z-index: 998; 
+        opacity: 0; 
+        
+        /* Regular Combo (Pale Yellow) */
+        --vig-color: rgba(255, 240, 100, 0.15); 
+        background: radial-gradient(circle, transparent 65%, var(--vig-color));
+        
+        transition: background 0.3s ease; 
+        will-change: opacity, transform;
+    }
+
+    /* SUPER COMBO (Dark Gold) */
+    #combo-vignette.super-combo {
+        --vig-color: rgba(255, 160, 0, 0.3);
+        background: radial-gradient(circle, transparent 60%, var(--vig-color));
+    }
+
+    /* TURBO COMBO (Purple) */
+    #combo-vignette.turbo-combo {
+        --vig-color: rgba(180, 0, 255, 0.4);
+        background: radial-gradient(circle, transparent 60%, var(--vig-color));
+    }
+    
+    /* 5-SECOND TIMER ANIMATION */
+    .timer-anim { animation: comboCountdown 5s linear forwards; }
+    
+    @keyframes comboCountdown {
+        0% { opacity: 1; transform: scale(1); }
+        100% { opacity: 0; transform: scale(1.15); }
+    }
+
+    .combo-pulse { animation: pulseGeneric 0.3s ease-out; }
+    @keyframes pulseGeneric {
+        0% { filter: brightness(1); }
+        50% { filter: brightness(1.5); }
+        100% { filter: brightness(1); }
+    }
+
+    /* REGION SELECTOR OVERLAY */
+    #region-overlay {
+        position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+        z-index: 2500;
+        background: rgba(24, 24, 27, 0.95);
+        backdrop-filter: blur(10px);
+        display: none;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 20px; box-sizing: border-box;
+    }
+    #region-overlay.show { display: flex; }
+    
+    .reg-grid {
+        display: grid; grid-template-columns: 1fr 1fr; gap: 15px;
+        width: 100%; max-width: 400px;
+    }
+    .reg-btn {
+        padding: 20px; background: #3f3f46; border: 1px solid var(--border);
+        border-radius: 12px; color: white; font-weight: 700; font-size: 1rem;
+        cursor: pointer; text-align: center;
+    }
+    .reg-btn:active { background: #52525b; transform: scale(0.98); }
+
+    /* VICTORY OVERLAY */
+    #victory-screen {
+        position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+        z-index: 2000;
+        background: rgba(0,0,0,0.85);
+        backdrop-filter: blur(10px);
+        display: none;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        opacity: 0; transition: opacity 0.5s;
+    }
+    #victory-screen.show { display: flex; opacity: 1; }
+    
+    .win-gif {
+        width: 280px; height: 280px; object-fit: cover;
+        border-radius: 20px; box-shadow: 0 0 50px rgba(72, 255, 140, 0.4);
+        margin-bottom: 30px;
+    }
+    .win-title { font-size: 2.5rem; font-weight: 900; color: #fff; margin-bottom: 10px; }
+    .win-sub { font-size: 1.2rem; color: #a1a1aa; margin-bottom: 40px; }
+    
+    .restart-btn {
+        padding: 15px 40px; border-radius: 50px; border: none;
+        background: var(--aura-green); color: #004225;
+        font-size: 1.1rem; font-weight: 800; cursor: pointer;
+        box-shadow: 0 0 20px rgba(72, 255, 140, 0.6);
+        transition: transform 0.2s;
+    }
+    .restart-btn:active { transform: scale(0.95); }
+
+    /* NAV BAR (DROPDOWN) */
+    .nav { 
+        position: sticky; top: 0;
+        width: 100%; max-width: 480px; 
+        padding: 15px 20px; 
+        box-sizing: border-box; z-index: 100;
+        background: rgba(24, 24, 27, 0.95);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        border-bottom: 1px solid var(--border);
+        display: flex; justify-content: center;
+    }
+    
+    .mode-select {
+        appearance: none; -webkit-appearance: none;
+        background: #27272a; border: 1px solid var(--border);
+        color: #fff; font-weight: 700; font-size: 1rem;
+        padding: 10px 40px 10px 20px;
+        border-radius: 8px; cursor: pointer;
+        text-align: center;
+        background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23FFFFFF%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E");
+        background-repeat: no-repeat;
+        background-position: right 12px top 50%;
+        background-size: 10px auto;
+    }
+
+    .main-container {
+        width: 100%; max-width: 460px; 
+        padding: 20px 24px;
+        box-sizing: border-box;
+        display: flex; flex-direction: column;
+    }
+
+    /* PROGRESS BAR */
+    .progress-track {
+        width: 100%;
+        height: 16px; 
+        background: var(--bar-bg);
+        border-radius: 8px;
+        margin-bottom: 25px;
+        position: relative;
+        overflow: hidden; 
+        transform: translateZ(0); 
+        -webkit-mask-image: -webkit-radial-gradient(white, black);
+    }
+    
+    .progress-fill {
+        height: 100%;
+        width: 0%;
+        background: var(--correct);
+        transition: width 0.5s cubic-bezier(0.34, 1.56, 0.64, 1), background-color 0.2s, opacity 0.2s;
+        position: relative; 
+        z-index: 5;
+        opacity: 0; 
+        overflow: visible; 
+    }
+    .progress-fill.visible { opacity: 1; }
+
+    /* Draining State */
+    .progress-fill.draining {
+        background: var(--wrong) !important;
+        width: 0% !important;
+        opacity: 0; 
+        transition: width 0.6s ease-out, opacity 0.6s ease-in;
+    }
+
+    /* NESTED AURA */
+    .progress-aura {
+        position: absolute;
+        top: 0; bottom: 0;
+        left: 100%; 
+        width: 150px; 
+        background: linear-gradient(to right, var(--aura-green), transparent);
+        filter: blur(8px); 
+        z-index: 6; 
+        opacity: 0;
+        pointer-events: none;
+        transform-origin: left center;
+        mix-blend-mode: screen; 
+    }
+    
+    .aura-shoot { animation: softPulse 1.6s ease-out forwards; }
+    
+    @keyframes softPulse {
+        0% { opacity: 0.8; transform: scaleX(0); } 
+        30% { opacity: 1; transform: scaleX(0.7); } 
+        100% { opacity: 0; transform: scaleX(1.5); } 
+    }
+
+    .progress-text {
+        text-align: right; font-size: 0.75rem; color: #71717a; 
+        font-weight: 700; margin-top: -22px; margin-bottom: 20px;
+    }
+
+    .view { display: none; flex-direction: column; width: 100%; align-items: center; }
+    .view.active { display: flex; }
+    
+    .flag-icon { 
+        font-size: 4.5rem; line-height: 1; text-align: center; display: block; 
+        filter: drop-shadow(0 4px 6px rgba(0,0,0,0.3)); margin: 0 auto;
+    }
+    
+    .country-name { 
+        font-size: 1.6rem; font-weight: 800; text-align: center; 
+        margin: 15px 0 30px 0; line-height: 1.1; width: 100%;
+        color: #fff;
+    }
+
+    .opts-container { width: 100%; display: flex; flex-direction: column; gap: 12px; }
+
+    .opt-btn {
+        position: relative; width: 100%; padding: 16px; 
+        border-radius: 14px; font-size: 0.95rem; color: #e4e4e7; font-weight: 600;
+        text-align: center; cursor: pointer; overflow: hidden;
+        border: 1px solid var(--border);
+        background: var(--card-bg);
+        -webkit-tap-highlight-color: transparent;
+        user-select: none;
+        box-sizing: border-box;
+        transition: background-color 0.1s;
+    }
+
+    @keyframes popClick {
+        0% { transform: scale(1); }
+        50% { transform: scale(0.92); }
+        100% { transform: scale(1); }
+    }
+    .pop-anim { animation: popClick 0.2s ease-out forwards; }
+
+    .opt-btn.correct { border-color: var(--correct); background: var(--correct); }
+    .opt-btn.wrong { border-color: var(--wrong); background: var(--wrong); }
+    .shake { animation: quickShake 0.4s ease-in-out both; }
+    
+    @keyframes quickShake {
+        0%, 100% { transform: translateX(0); }
+        25% { transform: translateX(-4px); }
+        75% { transform: translateX(4px); }
+    }
+
+    .search { 
+        width: 100%; padding: 14px; margin-bottom: 15px; 
+        border-radius: 10px; color: white; 
+        background: var(--card-bg); border: 1px solid var(--border); 
+        font-size: 0.95rem; box-sizing: border-box; outline: none;
+    }
+    .row { 
+        display: flex; align-items: center; justify-content: space-between; 
+        padding: 14px 0; border-bottom: 1px solid var(--border); width: 100%;
+    }
+    .row-left { display: flex; align-items: center; gap: 16px; flex: 1; }
+    .row-flag { font-size: 1.8rem; min-width: 40px; text-align: center; }
+    .row-country { font-weight: 600; font-size: 0.95rem; color: #e4e4e7; }
+    .row-right { text-align: right; }
+    .row-cap { font-size: 0.9rem; color: #a1a1aa; font-weight: 500; }
+
+</style>
+</head>
+<body>
+
+<div id="loading-screen">
+    <div class="load-title">CAPIDLE</div>
+    <div id="error-log"></div>
+</div>
+
+<div id="region-overlay">
+    <div style="color:white; font-size:1.5rem; font-weight:800; margin-bottom:20px;">SELECT REGION</div>
+    <div class="reg-grid">
+        <div class="reg-btn" onclick="selectRegion('AF')">Africa</div>
+        <div class="reg-btn" onclick="selectRegion('AS')">Asia</div>
+        <div class="reg-btn" onclick="selectRegion('EU')">Europe</div>
+        <div class="reg-btn" onclick="selectRegion('NA')">N. America</div>
+        <div class="reg-btn" onclick="selectRegion('SA')">S. America</div>
+        <div class="reg-btn" onclick="selectRegion('OC')">Oceania</div>
+    </div>
+    <div class="reg-btn" style="margin-top:20px; width:100%; max-width:400px" onclick="cancelRegion()">Cancel</div>
+</div>
+
+<div id="vignette"></div>
+<div id="combo-vignette"></div> 
+
+<div id="victory-screen">
+    <img src="victory.gif" class="win-gif" alt="Victory">
+    <div class="win-title">COMPLETED!</div>
+    <div class="win-sub">You conquered the world.</div>
+    <button class="restart-btn" onclick="restartGame()">PLAY AGAIN</button>
+</div>
+
+<div class="nav">
+    <select id="game-mode" class="mode-select" onchange="handleMode(this.value)">
+        <option value="global" selected>🌍 Global Quiz</option>
+        <option value="regional">📍 Regional Quiz</option>
+        <option value="study">📚 Study List</option>
+    </select>
+</div>
+
+<div class="main-container">
+    <div id="prog-container">
+        <div class="progress-track">
+            <div class="progress-fill" id="prog-bar">
+                <div class="progress-aura" id="prog-aura"></div>
+            </div>
+        </div>
+        <div class="progress-text" id="prog-text">0 / 197</div>
+    </div>
+
+    <div id="quiz-view" class="view active">
+        <div class="flag-icon" id="q-flag">🌍</div>
+        <div class="country-name" id="q-text">Loading...</div>
+        <div id="opts" class="opts-container"></div>
+    </div>
+
+    <div id="study-view" class="view">
+        <input type="text" id="search" class="search" placeholder="Search..." onkeyup="filter()">
+        <div id="list" style="width:100%"></div>
+    </div>
+</div>
+
+<script>
+// ERROR CATCHER
+window.onerror = function(msg, url, line) {
+    document.getElementById('error-log').innerText = "Error: " + msg;
+    return false;
+};
+
+// --- DATA ---
+const d=[
+{c:"Afghanistan",k:"Kabul",f:"🇦🇫",r:"AS"},{c:"Albania",k:"Tirana",f:"🇦🇱",r:"EU"},{c:"Algeria",k:"Algiers",f:"🇩🇿",r:"AF"},{c:"Andorra",k:"Andorra la Vella",f:"🇦🇩",r:"EU"},{c:"Angola",k:"Luanda",f:"🇦🇴",r:"AF"},
+{c:"Antigua & Barbuda",k:"Saint John's",f:"🇦🇬",r:"NA"},{c:"Argentina",k:"Buenos Aires",f:"🇦🇷",r:"SA"},{c:"Armenia",k:"Yerevan",f:"🇦🇲",r:"AS"},{c:"Australia",k:"Canberra",f:"🇦🇺",r:"OC"},{c:"Austria",k:"Vienna",f:"🇦🇹",r:"EU"},
+{c:"Azerbaijan",k:"Baku",f:"🇦🇿",r:"AS"},{c:"Bahamas",k:"Nassau",f:"🇧🇸",r:"NA"},{c:"Bahrain",k:"Manama",f:"🇧🇭",r:"AS"},{c:"Bangladesh",k:"Dhaka",f:"🇧🇩",r:"AS"},{c:"Barbados",k:"Bridgetown",f:"🇧🇧",r:"NA"},
+{c:"Belarus",k:"Minsk",f:"🇧🇾",r:"EU"},{c:"Belgium",k:"Brussels",f:"🇧🇪",r:"EU"},{c:"Belize",k:"Belmopan",f:"🇧🇿",r:"NA"},{c:"Benin",k:"Porto-Novo",f:"🇧🇯",r:"AF"},{c:"Bhutan",k:"Thimphu",f:"🇧🇹",r:"AS"},
+{c:"Bolivia",k:"Sucre",f:"🇧🇴",r:"SA"},{c:"Bosnia & Herzegovina",k:"Sarajevo",f:"🇧🇦",r:"EU"},{c:"Botswana",k:"Gaborone",f:"🇧🇼",r:"AF"},{c:"Brazil",k:"Brasília",f:"🇧🇷",r:"SA"},{c:"Brunei",k:"Bandar Seri Begawan",f:"🇧🇳",r:"AS"},
+{c:"Bulgaria",k:"Sofia",f:"🇧🇬",r:"EU"},{c:"Burkina Faso",k:"Ouagadougou",f:"🇧🇫",r:"AF"},{c:"Burundi",k:"Gitega",f:"🇧🇮",r:"AF"},{c:"Cabo Verde",k:"Praia",f:"🇨🇻",r:"AF"},{c:"Cambodia",k:"Phnom Penh",f:"🇰🇭",r:"AS"},
+{c:"Cameroon",k:"Yaoundé",f:"🇨🇲",r:"AF"},{c:"Canada",k:"Ottawa",f:"🇨🇦",r:"NA"},{c:"Central African Rep.",k:"Bangui",f:"🇨🇫",r:"AF"},{c:"Chad",k:"N'Djamena",f:"🇹🇩",r:"AF"},{c:"Chile",k:"Santiago",f:"🇨🇱",r:"SA"},
+{c:"China",k:"Beijing",f:"🇨🇳",r:"AS"},{c:"Colombia",k:"Bogotá",f:"🇨🇴",r:"SA"},{c:"Comoros",k:"Moroni",f:"🇰🇲",r:"AF"},{c:"Congo (DRC)",k:"Kinshasa",f:"🇨🇩",r:"AF"},{c:"Congo (Rep.)",k:"Brazzaville",f:"🇨🇬",r:"AF"},
+{c:"Costa Rica",k:"San José",f:"🇨🇷",r:"NA"},{c:"Croatia",k:"Zagreb",f:"🇭🇷",r:"EU"},{c:"Cuba",k:"Havana",f:"🇨🇺",r:"NA"},{c:"Cyprus",k:"Nicosia",f:"🇨🇾",r:"EU"},{c:"Czechia",k:"Prague",f:"🇨🇿",r:"EU"},
+{c:"Denmark",k:"Copenhagen",f:"🇩🇰",r:"EU"},{c:"Djibouti",k:"Djibouti",f:"🇩🇯",r:"AF"},{c:"Dominica",k:"Roseau",f:"🇩🇲",r:"NA"},{c:"Dominican Rep.",k:"Santo Domingo",f:"🇩🇴",r:"NA"},{c:"East Timor",k:"Dili",f:"🇹🇱",r:"AS"},
+{c:"Ecuador",k:"Quito",f:"🇪🇨",r:"SA"},{c:"Egypt",k:"Cairo",f:"🇪🇬",r:"AF"},{c:"El Salvador",k:"San Salvador",f:"🇸🇻",r:"NA"},{c:"Equatorial Guinea",k:"Malabo",f:"🇬🇶",r:"AF"},{c:"Eritrea",k:"Asmara",f:"🇪🇷",r:"AF"},
+{c:"Estonia",k:"Tallinn",f:"🇪🇪",r:"EU"},{c:"Eswatini",k:"Mbabane",f:"🇸🇿",r:"AF"},{c:"Ethiopia",k:"Addis Ababa",f:"🇪🇹",r:"AF"},{c:"Fiji",k:"Suva",f:"🇫🇯",r:"OC"},{c:"Finland",k:"Helsinki",f:"🇫🇮",r:"EU"},
+{c:"France",k:"Paris",f:"🇫🇷",r:"EU"},{c:"Gabon",k:"Libreville",f:"🇬🇦",r:"AF"},{c:"Gambia",k:"Banjul",f:"🇬🇲",r:"AF"},{c:"Georgia",k:"Tbilisi",f:"🇬🇪",r:"AS"},{c:"Germany",k:"Berlin",f:"🇩🇪",r:"EU"},
+{c:"Ghana",k:"Accra",f:"🇬🇭",r:"AF"},{c:"Greece",k:"Athens",f:"🇬🇷",r:"EU"},{c:"Grenada",k:"St. George's",f:"🇬🇩",r:"NA"},{c:"Guatemala",k:"Guatemala City",f:"🇬🇹",r:"NA"},{c:"Guinea",k:"Conakry",f:"🇬🇳",r:"AF"},
+{c:"Guinea-Bissau",k:"Bissau",f:"🇬🇼",r:"AF"},{c:"Guyana",k:"Georgetown",f:"🇬🇾",r:"SA"},{c:"Haiti",k:"Port-au-Prince",f:"🇭🇹",r:"NA"},{c:"Honduras",k:"Tegucigalpa",f:"🇭🇳",r:"NA"},{c:"Hungary",k:"Budapest",f:"🇭🇺",r:"EU"},
+{c:"Iceland",k:"Reykjavík",f:"🇮🇸",r:"EU"},{c:"India",k:"New Delhi",f:"🇮🇳",r:"AS"},{c:"Indonesia",k:"Jakarta",f:"🇮🇩",r:"AS"},{c:"Iran",k:"Tehran",f:"🇮🇷",r:"AS"},{c:"Iraq",k:"Baghdad",f:"🇮🇶",r:"AS"},
+{c:"Ireland",k:"Dublin",f:"🇮🇪",r:"EU"},{c:"Israel",k:"Jerusalem",f:"🇮🇱",r:"AS"},{c:"Italy",k:"Rome",f:"🇮🇹",r:"EU"},{c:"Ivory Coast",k:"Yamoussoukro",f:"🇨🇮",r:"AF"},{c:"Jamaica",k:"Kingston",f:"🇯🇲",r:"NA"},
+{c:"Japan",k:"Tokyo",f:"🇯🇵",r:"AS"},{c:"Jordan",k:"Amman",f:"🇯🇴",r:"AS"},{c:"Kazakhstan",k:"Astana",f:"🇰🇿",r:"AS"},{c:"Kenya",k:"Nairobi",f:"🇰🇪",r:"AF"},{c:"Kiribati",k:"Tarawa",f:"🇰🇮",r:"OC"},
+{c:"Kosovo",k:"Pristina",f:"🇽🇰",r:"EU"},{c:"Kuwait",k:"Kuwait City",f:"🇰🇼",r:"AS"},{c:"Kyrgyzstan",k:"Bishkek",f:"🇰🇬",r:"AS"},{c:"Laos",k:"Vientiane",f:"🇱🇦",r:"AS"},{c:"Latvia",k:"Riga",f:"🇱🇻",r:"EU"},
+{c:"Lebanon",k:"Beirut",f:"🇱🇧",r:"AS"},{c:"Lesotho",k:"Maseru",f:"🇱🇸",r:"AF"},{c:"Liberia",k:"Monrovia",f:"🇱🇷",r:"AF"},{c:"Libya",k:"Tripoli",f:"🇱🇾",r:"AF"},{c:"Liechtenstein",k:"Vaduz",f:"🇱🇮",r:"EU"},
+{c:"Lithuania",k:"Vilnius",f:"🇱🇹",r:"EU"},{c:"Luxembourg",k:"Luxembourg",f:"🇱🇺",r:"EU"},{c:"Madagascar",k:"Antananarivo",f:"🇲🇬",r:"AF"},{c:"Malawi",k:"Lilongwe",f:"🇲🇼",r:"AF"},{c:"Malaysia",k:"Kuala Lumpur",f:"🇲🇾",r:"AS"},
+{c:"Maldives",k:"Malé",f:"🇲🇻",r:"AS"},{c:"Mali",k:"Bamako",f:"🇲🇱",r:"AF"},{c:"Malta",k:"Valletta",f:"🇲🇹",r:"EU"},{c:"Marshall Islands",k:"Majuro",f:"🇲🇭",r:"OC"},{c:"Mauritania",k:"Nouakchott",f:"🇲🇷",r:"AF"},
+{c:"Mauritius",k:"Port Louis",f:"🇲🇺",r:"AF"},{c:"Mexico",k:"Mexico City",f:"🇲🇽",r:"NA"},{c:"Micronesia",k:"Palikir",f:"🇫🇲",r:"OC"},{c:"Moldova",k:"Chisinau",f:"🇲🇩",r:"EU"},{c:"Monaco",k:"Monaco",f:"🇲🇨",r:"EU"},
+{c:"Mongolia",k:"Ulaanbaatar",f:"🇲🇳",r:"AS"},{c:"Montenegro",k:"Podgorica",f:"🇲🇪",r:"EU"},{c:"Morocco",k:"Rabat",f:"🇲🇦",r:"AF"},{c:"Mozambique",k:"Maputo",f:"🇲🇿",r:"AF"},{c:"Myanmar",k:"Naypyidaw",f:"🇲🇲",r:"AS"},
+{c:"Namibia",k:"Windhoek",f:"🇳🇦",r:"AF"},{c:"Nauru",k:"Yaren",f:"🇳🇷",r:"OC"},{c:"Nepal",k:"Kathmandu",f:"🇳🇵",r:"AS"},{c:"Netherlands",k:"Amsterdam",f:"🇳🇱",r:"EU"},{c:"New Zealand",k:"Wellington",f:"🇳🇿",r:"OC"},
+{c:"Nicaragua",k:"Managua",f:"🇳🇮",r:"NA"},{c:"Niger",k:"Niamey",f:"🇳🇪",r:"AF"},{c:"Nigeria",k:"Abuja",f:"🇳🇬",r:"AF"},{c:"North Korea",k:"Pyongyang",f:"🇰🇵",r:"AS"},{c:"North Macedonia",k:"Skopje",f:"🇲🇰",r:"EU"},
+{c:"Norway",k:"Oslo",f:"🇳🇴",r:"EU"},{c:"Oman",k:"Muscat",f:"🇴🇲",r:"AS"},{c:"Pakistan",k:"Islamabad",f:"🇵🇰",r:"AS"},{c:"Palau",k:"Ngerulmud",f:"🇵🇼",r:"OC"},{c:"Palestine",k:"Ramallah",f:"🇵🇸",r:"AS"},
+{c:"Panama",k:"Panama City",f:"🇵🇦",r:"NA"},{c:"Papua New Guinea",k:"Port Moresby",f:"🇵🇬",r:"OC"},{c:"Paraguay",k:"Asunción",f:"🇵🇾",r:"SA"},{c:"Peru",k:"Lima",f:"🇵🇪",r:"SA"},{c:"Philippines",k:"Manila",f:"🇵🇭",r:"AS"},
+{c:"Poland",k:"Warsaw",f:"🇵🇱",r:"EU"},{c:"Portugal",k:"Lisbon",f:"🇵🇹",r:"EU"},{c:"Qatar",k:"Doha",f:"🇶🇦",r:"AS"},{c:"Romania",k:"Bucharest",f:"🇷🇴",r:"EU"},{c:"Russia",k:"Moscow",f:"🇷🇺",r:"EU"},
+{c:"Rwanda",k:"Kigali",f:"🇷🇼",r:"AF"},{c:"St. Kitts & Nevis",k:"Basseterre",f:"🇰🇳",r:"NA"},{c:"St. Lucia",k:"Castries",f:"🇱🇨",r:"NA"},{c:"St. Vincent",k:"Kingstown",f:"🇻🇨",r:"NA"},{c:"Samoa",k:"Apia",f:"🇼🇸",r:"OC"},
+{c:"San Marino",k:"San Marino",f:"🇸🇲",r:"EU"},{c:"Sao Tome & Principe",k:"Sao Tome",f:"🇸🇹",r:"AF"},{c:"Saudi Arabia",k:"Riyadh",f:"🇸🇦",r:"AS"},{c:"Senegal",k:"Dakar",f:"🇸🇳",r:"AF"},{c:"Serbia",k:"Belgrade",f:"🇷🇸",r:"EU"},
+{c:"Seychelles",k:"Victoria",f:"🇸🇨",r:"AF"},{c:"Sierra Leone",k:"Freetown",f:"🇸🇱",r:"AF"},{c:"Singapore",k:"Singapore",f:"🇸🇬",r:"AS"},{c:"Slovakia",k:"Bratislava",f:"🇸🇰",r:"EU"},{c:"Slovenia",k:"Ljubljana",f:"🇸🇮",r:"EU"},
+{c:"Solomon Islands",k:"Honiara",f:"🇸🇧",r:"OC"},{c:"Somalia",k:"Mogadishu",f:"🇸🇴",r:"AF"},{c:"South Africa",k:"Pretoria",f:"🇿🇦",r:"AF"},{c:"South Korea",k:"Seoul",f:"🇰🇷",r:"AS"},{c:"South Sudan",k:"Juba",f:"🇸🇸",r:"AF"},
+{c:"Spain",k:"Madrid",f:"🇪🇸",r:"EU"},{c:"Sri Lanka",k:"Colombo",f:"🇱🇰",r:"AS"},{c:"Sudan",k:"Khartoum",f:"🇸🇩",r:"AF"},{c:"Suriname",k:"Paramaribo",f:"🇸🇷",r:"SA"},{c:"Sweden",k:"Stockholm",f:"🇸🇪",r:"EU"},
+{c:"Switzerland",k:"Bern",f:"🇨🇭",r:"EU"},{c:"Syria",k:"Damascus",f:"🇸🇾",r:"AS"},{c:"Taiwan",k:"Taipei",f:"🇹🇼",r:"AS"},{c:"Tajikistan",k:"Dushanbe",f:"🇹🇯",r:"AS"},{c:"Tanzania",k:"Dodoma",f:"🇹🇿",r:"AF"},
+{c:"Thailand",k:"Bangkok",f:"🇹🇭",r:"AS"},{c:"Togo",k:"Lomé",f:"🇹🇬",r:"AF"},{c:"Tonga",k:"Nukuʻalofa",f:"🇹🇴",r:"OC"},{c:"Trinidad & Tobago",k:"Port of Spain",f:"🇹🇹",r:"NA"},{c:"Tunisia",k:"Tunis",f:"🇹🇳",r:"AF"},
+{c:"Türkiye",k:"Ankara",f:"🇹🇷",r:"AS"},{c:"Turkmenistan",k:"Ashgabat",f:"🇹🇲",r:"AS"},{c:"Tuvalu",k:"Funafuti",f:"🇹🇻",r:"OC"},{c:"Uganda",k:"Kampala",f:"🇺🇬",r:"AF"},{c:"Ukraine",k:"Kyiv",f:"🇺🇦",r:"EU"},
+{c:"UAE",k:"Abu Dhabi",f:"🇦🇪",r:"AS"},{c:"United Kingdom",k:"London",f:"🇬🇧",r:"EU"},{c:"United States",k:"Washington, D.C.",f:"🇺🇸",r:"NA"},{c:"Uruguay",k:"Montevideo",f:"🇺🇾",r:"SA"},{c:"Uzbekistan",k:"Tashkent",f:"🇺🇿",r:"AS"},
+{c:"Vanuatu",k:"Port Vila",f:"🇻🇺",r:"OC"},{c:"Vatican City",k:"Vatican City",f:"🇻🇦",r:"EU"},{c:"Venezuela",k:"Caracas",f:"🇻🇪",r:"SA"},{c:"Vietnam",k:"Hanoi",f:"🇻🇳",r:"AS"},{c:"Yemen",k:"Sana'a",f:"🇾🇪",r:"AS"},
+{c:"Zambia",k:"Lusaka",f:"🇿🇲",r:"AF"},{c:"Zimbabwe",k:"Harare",f:"🇿🇼",r:"AF"}
+];
+
+// --- AUDIO SYSTEM ---
+const soundFiles = {
+    click:   'click.mp3',
+    correct: 'correct.mp3',
+    wrong:   'wrong.mp3',
+    shatter: 'shatter.mp3',
+    victory: 'victory.mp3',
+    combo:   'combo.mp3',
+    combo2:  'combo2.mp3',
+    fire:    'fire.mp3',
+    negative:'negative.mp3'
+};
+
+const volumes = {
+    click: 0.5, correct: 0.5, wrong: 0.5, shatter: 0.7,
+    victory: 0.8, combo: 0.6, combo2: 0.6, fire: 0.3, negative: 0.6
+};
+
+const masters = {};
+// SAFE LOADING
+for(let k in soundFiles) {
+    try {
+        const a = new Audio(soundFiles[k]);
+        a.preload = 'auto'; 
+        a.load();
+        masters[k] = a;
+    } catch(e) { console.warn("Missing Audio:", k); }
+}
+
+// SAFE LOOP SETTING
+if(masters['fire']) masters['fire'].loop = true;
+
+let audioUnlocked = false;
+function unlockAudio() {
+    if(audioUnlocked) return;
+    for(let k in masters) {
+        if(!masters[k]) continue;
+        masters[k].muted = true; 
+        masters[k].play().then(() => {
+            masters[k].pause();
+            masters[k].currentTime = 0;
+            masters[k].muted = false;
+            masters[k].volume = volumes[k]; 
+        }).catch(()=>{});
+    }
+    audioUnlocked = true;
+    document.removeEventListener('click', unlockAudio);
+    document.removeEventListener('touchstart', unlockAudio);
+}
+document.addEventListener('click', unlockAudio);
+document.addEventListener('touchstart', unlockAudio);
+
+function playSound(type, playbackRate = 1.0) {
+    const master = masters[type];
+    if(master) {
+        const clone = master.cloneNode(); 
+        clone.volume = volumes[type] || 0.5;
+        clone.muted = false; 
+        if(playbackRate !== 1.0) {
+            clone.playbackRate = playbackRate;
+            clone.preservesPitch = false; 
+        }
+        clone.play().catch(e => console.warn('Audio blocked', e));
+        clone.onended = () => { clone.remove(); };
+    }
+}
+
+function manageFire(on, comboCount = 0) {
+    const f = masters['fire'];
+    if(!f) return;
+    if(on) {
+        let boost = 0;
+        if(comboCount >= 8 && comboCount < 18) {
+            boost = (comboCount - 7) * 0.05 * 0.3; 
+        } else if(comboCount >= 18) {
+            boost = 0.15; 
+        }
+        let newVol = 0.3 + boost;
+        if(newVol > 1) newVol = 1;
+        f.volume = newVol;
+        if(f.paused) f.play().catch(()=>{});
+    } else {
+        f.pause();
+        f.currentTime = 0;
+    }
+}
+// -------------------
+
+let pool = []; 
+let streak = 0; 
+let combo = 0; 
+let qStart = 0; 
+let cur = {};
+let lock = false;
+let comboTimer = null; 
+let activeMode = 'global'; 
+let activeRegion = null; 
+
+function startUp() {
+    setTimeout(() => {
+        document.getElementById('loading-screen').style.opacity = '0';
+        setTimeout(() => {
+            document.getElementById('loading-screen').style.display = 'none';
+        }, 500);
+        resetGameLogic();
+        loadQ();
+    }, 3000);
+}
+
+function handleMode(mode) {
+    activeMode = mode;
+    playSound('click');
+    
+    document.getElementById('quiz-view').classList.remove('active');
+    document.getElementById('study-view').classList.remove('active');
+    document.getElementById('prog-container').style.display = 'none';
+    document.getElementById('region-overlay').classList.remove('show');
+
+    if(mode === 'global') {
+        activeRegion = null;
+        resetGameLogic();
+        document.getElementById('quiz-view').classList.add('active');
+        document.getElementById('prog-container').style.display = 'block';
+        loadQ();
+    } else if(mode === 'regional') {
+        document.getElementById('region-overlay').classList.add('show');
+    } else if(mode === 'study') {
+        activeRegion = null; 
+        document.getElementById('study-view').classList.add('active');
+        renderList();
+    }
+}
+
+function selectRegion(reg) {
+    activeRegion = reg;
+    document.getElementById('region-overlay').classList.remove('show');
+    resetGameLogic();
+    document.getElementById('quiz-view').classList.add('active');
+    document.getElementById('prog-container').style.display = 'block';
+    loadQ();
+}
+
+function cancelRegion() {
+    document.getElementById('game-mode').value = 'global';
+    handleMode('global');
+}
+
+function resetGameLogic() {
+    if(activeMode === 'regional' && activeRegion) {
+        pool = d.filter(x => x.r === activeRegion);
+    } else {
+        pool = [...d]; 
+    }
+    streak = 0;
+    breakCombo();
+    updateBar(false);
+}
+
+function loadQ() {
+    try {
+        lock=false;
+        const con = document.getElementById('opts');
+        con.innerHTML='';
+        
+        document.getElementById('prog-bar').classList.remove('draining', 'pulse-active');
+        
+        let target = (activeMode === 'regional' && activeRegion) ? d.filter(x=>x.r===activeRegion).length : d.length;
+
+        if(pool.length === 0 && streak === target) {
+            triggerVictory();
+            return;
+        }
+        
+        if(pool.length === 0) {
+             if(activeMode === 'regional' && activeRegion) {
+                pool = d.filter(x => x.r === activeRegion);
+            } else {
+                pool = [...d];
+            }
+        }
+
+        const idx = Math.floor(Math.random() * pool.length);
+        const q = pool[idx];
+        pool.splice(idx, 1);
+        
+        cur = q;
+        document.getElementById('q-text').innerText = q.c;
+        document.getElementById('q-flag').innerText = q.f;
+        
+        qStart = Date.now();
+
+        let sameRegion = d.filter(x => x.r === q.r && x.k !== q.k);
+        sameRegion.sort(() => Math.random() - 0.5);
+        let opts = sameRegion.slice(0, 3);
+        opts.push(q);
+        opts.sort(() => Math.random() - 0.5);
+
+        opts.forEach(o=>{
+            let b = document.createElement('div');
+            b.className = 'opt-btn';
+            b.innerText = o.k;
+            b.onclick = ()=>check(b, o.k);
+            con.appendChild(b);
+        });
+        
+    } catch(e) { console.error(e); }
+}
+
+function check(btn, ans) {
+    if(ans === cur.k) {
+        if(combo >= 18) playSound('combo2', 1.0 + ((combo - 17) * 0.05));
+        else if(combo >= 8) playSound('combo', 1.0 + ((combo - 7) * 0.1));
+        else if(combo >= 4) playSound('combo2'); 
+        else playSound('correct');
+    } else {
+        if(streak > 10) playSound('shatter');
+        else playSound('wrong');
+    }
+
+    if(lock) return;
+    lock = true;
+    
+    btn.classList.add('pop-anim');
+    const elapsed = Date.now() - qStart; 
+    
+    if(ans === cur.k) {
+        // CORRECT
+        btn.classList.add('correct');
+        streak++;
+        if(navigator.vibrate) navigator.vibrate(10);
+        
+        if(comboTimer) clearTimeout(comboTimer);
+
+        if(elapsed < 5000) {
+            combo++;
+        } else {
+            breakCombo();
+        }
+
+        const vig = document.getElementById('combo-vignette');
+
+        if(combo > 0) {
+            vig.classList.remove('timer-anim');
+            void vig.offsetWidth; 
+            vig.classList.add('timer-anim');
+            comboTimer = setTimeout(timeoutCombo, 5000);
+        }
+
+        if(combo >= 18) {
+            vig.classList.remove('super-combo');
+            vig.classList.add('active', 'turbo-combo');
+            manageFire(true, combo);
+        } else if(combo >= 8) {
+            vig.classList.remove('turbo-combo');
+            vig.classList.add('active', 'super-combo');
+            manageFire(true, combo);
+        } else if(combo >= 4) {
+            vig.classList.add('active');
+            vig.classList.remove('super-combo', 'turbo-combo');
+            manageFire(false);
+        } else {
+            manageFire(false);
+            if(combo < 4) {
+               vig.classList.remove('timer-anim', 'active', 'super-combo', 'turbo-combo');
+               if(comboTimer) clearTimeout(comboTimer); 
+            }
+        }
+        
+        if(combo >= 4) {
+            vig.classList.remove('combo-pulse');
+            void vig.offsetWidth;
+            vig.classList.add('combo-pulse');
+        }
+        
+        setTimeout(() => {
+            updateBar(true); 
+            let target = (activeMode === 'regional' && activeRegion) ? d.filter(x=>x.r===activeRegion).length : d.length;
+            if(streak === target) {
+                setTimeout(triggerVictory, 600);
+            } else {
+                setTimeout(loadQ, 600);
+            }
+        }, 250);
+
+    } else {
+        // WRONG
+        btn.classList.add('wrong', 'shake');
+        breakCombo();
+        
+        if(streak > 10) {
+            document.getElementById('vignette').style.opacity = '1';
+            document.getElementById('vignette').classList.add('throb');
+            setTimeout(()=>{
+                 document.getElementById('vignette').style.opacity = '0';
+                 document.getElementById('vignette').classList.remove('throb');
+            }, 1200);
+            if(navigator.vibrate) navigator.vibrate(200); 
+        } else {
+            if(navigator.vibrate) navigator.vibrate([40,40]);
+        }
+
+        document.querySelectorAll('.opt-btn').forEach(b=>{
+            if(b.innerText === cur.k) b.classList.add('correct');
+        });
+        
+        setTimeout(() => {
+            resetGameLogic(); 
+            const bar = document.getElementById('prog-bar');
+            bar.classList.add('draining');
+            updateBar(false);
+        }, 250);
+        
+        setTimeout(loadQ, 800);
+    }
+}
+
+function timeoutCombo() {
+    if(combo >= 4) {
+        playSound('negative');
+        breakCombo();
+    }
+}
+
+function breakCombo() {
+    combo = 0;
+    const vig = document.getElementById('combo-vignette');
+    vig.classList.remove('timer-anim', 'active', 'super-combo', 'turbo-combo');
+    manageFire(false);
+    if(comboTimer) clearTimeout(comboTimer);
+}
+
+function triggerVictory() {
+    playSound('victory');
+    const screen = document.getElementById('victory-screen');
+    screen.classList.add('show');
+    breakCombo();
+}
+
+function restartGame() {
+    resetGameLogic();
+    document.getElementById('victory-screen').classList.remove('show');
+    const vic = masters['victory']; 
+    if(vic) {
+        vic.pause();
+        vic.currentTime = 0;
+    }
+    loadQ();
+}
+
+function updateBar(fireAura) {
+    let target = (activeMode === 'regional' && activeRegion) ? d.filter(x=>x.r===activeRegion).length : d.length;
+    const pct = (streak / target) * 100;
+    
+    const bar = document.getElementById('prog-bar');
+    const aura = document.getElementById('prog-aura');
+    
+    document.getElementById('prog-text').innerText = streak + ' / ' + target;
+
+    if(streak === 0) {
+        bar.style.width = '0%';
+        bar.classList.remove('visible');
+        aura.classList.remove('aura-shoot');
+        aura.style.opacity = '0'; 
+    } else if(!bar.classList.contains('draining')) {
+        bar.style.width = pct + '%';
+        bar.classList.add('visible'); 
+        if(fireAura) {
+            aura.classList.remove('aura-shoot');
+            void aura.offsetWidth; 
+            aura.classList.add('aura-shoot');
+        }
+    }
+}
+
+let listDone = false;
+function renderList() {
+    const l = document.getElementById('list');
+    l.innerHTML='';
+    [...d].sort((a,b)=>a.c.localeCompare(b.c)).forEach(i=>{
+        let r = document.createElement('div');
+        r.className='row';
+        r.innerHTML = `
+            <div class="row-left">
+                <span class="row-flag">${i.f}</span>
+                <span class="row-country">${i.c}</span>
+            </div>
+            <div class="row-right">
+                <span class="row-cap">${i.k}</span>
+            </div>
+        `;
+        l.appendChild(r);
+    });
+}
+
+function filter() {
+    let v = document.getElementById('search').value.toLowerCase();
+    document.querySelectorAll('.row').forEach(r=>{
+        r.style.display = r.innerText.toLowerCase().includes(v) ? 'flex' : 'none';
+    });
+}
+
+window.onload = startUp;
+</script>
+</body>
+</html>
